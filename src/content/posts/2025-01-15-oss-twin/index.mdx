@@ -25,7 +25,7 @@ Here are several open-source projects that we have heavily used to build ScopeDB
 
 * ScopeDB stores user data in object storage services. We leverage [Apache OpenDAL](https://github.com/apache/opendal) as a unified interface to access various object storage services at users' choice.
 * ScopeDB manages metadata with relational database services. We leverage [SQLx](https://github.com/launchbadge/sqlx) and [SeaQuery](https://github.com/SeaQL/sea-query) to interact efficiently and ergonomically with relational databases.
-* ScopeDB supports multiple [data types](https://www.scopedb.io/reference/datatypes-overview). We leverage [Jiff](https://github.com/BurntSushi/jiff) with its `Timestamp` and `SignedDuration` types for in-memory calculations, and [ordered-float](https://github.com/reem/rust-ordered-float) to extend the floating point numbers with total ordering.
+* ScopeDB supports multiple [data types](https://docs.scopedb.io/reference/datatypes-overview/). We leverage [Jiff](https://github.com/BurntSushi/jiff) with its `Timestamp` and `SignedDuration` types for in-memory calculations, and [ordered-float](https://github.com/reem/rust-ordered-float) to extend the floating point numbers with total ordering.
 
 UPDATE (2025-01-15): Filtered internal crates, the open-source dependencies are 623 in total. Check out this [Gist](https://gist.github.com/tisonkun/06550d2dcd9cf6551887ee6305e92edc) to see if your project is one of them \:D (Note that a dependency in the lockfile may not be used in the final binary)
 
@@ -110,7 +110,7 @@ Here are a few examples of the open-source projects we developed during the deve
 
 [Logforth](https://github.com/fast/logforth) originated from the need for logging when developing ScopeDB. We initially used another library to complete this function. Still, we soon found that the library had some redundant designs and had not been maintained for over a year. Therefore, we quickly implemented a logging library that meets the needs of ScopeDB and can be easily extended, and open sourced it.
 
-To support scheduled tasks within the database system, we developed [Fastimer](https://github.com/fast/fastimer) to schedule different tasks in different manners. And to allow database users to define scheduled tasks with [`CREATE TASK` statement](https://www.scopedb.io/reference/stmt-ddl#create-task), we developed [Cronexpr](https://github.com/cratesland/cronexpr) to support users specify the schedule frequency using cron expressions.
+To support scheduled tasks within the database system, we developed [Fastimer](https://github.com/fast/fastimer) to schedule different tasks in different manners. And to allow database users to define scheduled tasks with `CREATE JOB` statement, we developed [Cronexpr](https://github.com/cratesland/cronexpr) to support users specify the schedule frequency using cron expressions.
 
 Last but not least, [ScopeDB's SDK](https://github.com/scopedb/scopedb-sdk) is open-source. Obviously, there is no benefit in privating the SDK, since the SDK does not have commercial value by itself, but is used to support ScopeDB's user development applications. This is the same as Snowflake keeps its SDKs open-source. And when you think about it, GitHub also has its server code private and proprietary, while keeping its SDKs, CLIs, and even action runners open-source.
 
