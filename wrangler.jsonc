@@ -1,6 +1,6 @@
 {
   "main": "dist/_worker.js/index.js",
-  "name": "nightsky-blog",
+  "name": "blog-en",
   "compatibility_date": "2026-03-07",
   "compatibility_flags": [
     "nodejs_compat",
