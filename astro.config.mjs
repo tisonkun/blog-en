@@ -23,6 +23,10 @@ export default defineConfig({
         port: port
     },
 
+    redirects: {
+        '/posts/oss-twin': 'https://www.scopedb.io/blog/insight-in-no-time',
+    },
+
     markdown: {
         remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
             aliases: {
