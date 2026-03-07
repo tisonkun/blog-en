@@ -10,13 +10,12 @@ import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { h } from "hastscript";
 import remarkToc from "remark-toc";
 import rehypeToc from "rehype-toc";
-
 import tailwindcss from "@tailwindcss/vite";
+import cloudflare from "@astrojs/cloudflare";
 
 const port = 4000;
 const isBuild = process.env.npm_lifecycle_script?.includes("astro build");
-const baseUrl = isBuild ? 'https://tisonkun.io' : `http://localhost:${port}`;
-
+const baseUrl = isBuild ? 'https://www.tisonkun.io' : `http://localhost:${port}`;
 
 // https://astro.build/config
 export default defineConfig({
@@ -66,5 +65,7 @@ export default defineConfig({
 
     vite: {
         plugins: [tailwindcss()]
-    }
+    },
+
+    adapter: cloudflare()
 });
