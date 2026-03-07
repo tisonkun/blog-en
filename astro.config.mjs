@@ -1,5 +1,4 @@
 import { defineConfig } from 'astro/config';
-import tailwind from "@astrojs/tailwind";
 import sitemap from "@astrojs/sitemap";
 import mdx from "@astrojs/mdx";
 import remarkDirective from "remark-directive";
@@ -12,6 +11,8 @@ import { h } from "hastscript";
 import remarkToc from "remark-toc";
 import rehypeToc from "rehype-toc";
 
+import tailwindcss from "@tailwindcss/vite";
+
 const port = 4000;
 const isBuild = process.env.npm_lifecycle_script?.includes("astro build");
 const baseUrl = isBuild ? 'https://tisonkun.io' : `http://localhost:${port}`;
@@ -22,6 +23,7 @@ export default defineConfig({
     server: {
         port: port
     },
+
     markdown: {
         remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
             aliases: {
@@ -50,11 +52,19 @@ export default defineConfig({
             },
         }]],
     },
+
     site: baseUrl,
-    integrations: [tailwind({
-        applyBaseStyles: false
-    }), sitemap(), expressiveCode({
-        themes: ['solarized-light'],
-        plugins: [pluginLineNumbers()],
-    }), mdx()]
+
+    integrations: [
+        sitemap(),
+        expressiveCode({
+            themes: ['solarized-light'],
+            plugins: [pluginLineNumbers()],
+        }),
+        mdx(),
+    ],
+
+    vite: {
+        plugins: [tailwindcss()]
+    }
 });

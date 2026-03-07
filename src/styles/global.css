@@ -1,73 +1,88 @@
-@import "callout.css";
+@import "tailwindcss";
+@import "./callout.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer base {
+    :root {
+        font-family: "Open Sans Variable", sans-serif;
+        font-size: 1.125em;
+        line-height: 2.0;
+        scroll-behavior: smooth;
+    }
 
-body {
-    @apply font-normal leading-normal;
-}
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: "Open Sans Variable", sans-serif;
+    }
 
-p,
-ol,
-ul,
-dl,
-table {
-    @apply my-2 text-base;
-}
+    body {
+        @apply font-normal leading-normal;
+    }
 
-h1 {
-    @apply font-extrabold mb-2 mt-6 text-3xl;
-}
+    p,
+    ol,
+    ul,
+    dl,
+    table {
+        @apply my-2 text-base;
+    }
 
-h2 {
-    @apply font-bold mb-2 mt-6 text-2xl;
-}
+    h1 {
+        @apply font-extrabold mb-2 mt-6 text-3xl;
+    }
 
-h3 {
-    @apply font-semibold mb-2 mt-6 text-xl;
-}
+    h2 {
+        @apply font-bold mb-2 mt-6 text-2xl;
+    }
 
-h4,
-h5 {
-    @apply font-medium mb-2 mt-4 text-xl;
-}
+    h3 {
+        @apply font-semibold mb-2 mt-6 text-xl;
+    }
 
-strong,
-b {
-    @apply font-bold;
-}
+    h4,
+    h5 {
+        @apply font-medium mb-2 mt-4 text-xl;
+    }
 
-blockquote {
-    @apply border-l-2 text-gray-500 border-gray-500 px-4;
-}
+    strong,
+    b {
+        @apply font-bold;
+    }
 
-hr {
-    @apply my-4;
-}
+    blockquote {
+        @apply border-l-2 text-gray-500 border-gray-500 px-4;
+    }
 
-table {
-    @apply block mb-4 border-collapse overflow-x-auto text-left;
-}
+    hr {
+        @apply my-4;
+    }
 
-thead {
-    @apply border-b-2;
-}
+    table {
+        @apply block mb-4 border-collapse overflow-x-auto text-left;
+    }
 
-th {
-    @apply p-3 border-b-2 text-left break-words;
-}
+    thead {
+        @apply border-b-2;
+    }
 
-td {
-    @apply p-3 border-b text-left break-words;
-}
+    th {
+        @apply p-3 border-b-2 text-left break-words;
+    }
 
-a {
-    @apply text-blue-600 hover:text-gray-400 no-underline break-words;
-}
+    td {
+        @apply p-3 border-b text-left break-words;
+    }
 
-pre {
-    @apply overflow-auto;
+    a {
+        @apply text-blue-600 hover:text-gray-400 no-underline break-words;
+    }
+
+    pre {
+        @apply overflow-auto;
+    }
 }
 
 .post-content {
@@ -83,7 +98,7 @@ pre {
 }
 
 .post-content code {
-    @apply rounded bg-gray-300 px-2 py-px bg-opacity-75;
+    @apply rounded bg-gray-300/75 px-2 py-px;
 }
 
 .post-content pre code {
@@ -148,22 +163,4 @@ figcaption {
 
 .header-link {
     @apply float-right text-gray-500;
-}
-
-@layer base {
-    :root {
-        font-family: 'Open Sans Variable', sans-serif;
-        font-size: 1.125em;
-        line-height: 2.0;
-        scroll-behavior: smooth;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        font-family: 'Open Sans Variable', sans-serif;
-    }
 }
