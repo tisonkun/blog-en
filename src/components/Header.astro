@@ -1,5 +1,5 @@
 ---
-import {Site} from "@/config";
+import { Site } from "@/config";
 ---
 
 <header class="mt-8">
@@ -9,24 +9,30 @@ import {Site} from "@/config";
     <div class="lg:flex text-center justify-between">
         <p class="text-lg text-gray-600">{Site.description}</p>
         <nav class="my-0">
-            <ul class="my-0 justify-center flex flex-wrap list-disc list-inside">
-                {Site.menu.icons.map(({clz, url}) => (
+            <ul
+                class="my-0 justify-center flex flex-wrap list-disc list-inside"
+            >
+                {
+                    Site.menu.icons.map(({ clz, url }) => (
                         <li class="list-none mx-2">
                             <a class="text-gray-600" href={url}>
-                                <i class:list={["text-2xl", clz]}/>
+                                <i class:list={["text-2xl", clz]} />
                             </a>
                         </li>
-                ))}
+                    ))
+                }
             </ul>
         </nav>
     </div>
     <nav class="text-center border-t border-b px-1 mt-4">
         <ul class="list-disc list-inside">
-            {Site.menu.navs.map(({name, url}) => (
+            {
+                Site.menu.navs.map(({ name, url }) => (
                     <li class="inline-block list-none mx-4">
                         <a href={url}>{name}</a>
                     </li>
-            ))}
+                ))
+            }
         </ul>
     </nav>
 </header>

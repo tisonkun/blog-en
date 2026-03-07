@@ -1,33 +1,35 @@
 ---
-import "@/styles/global.css"
-import Footer from "@/components/Footer.astro"
-import Header from "@/components/Header.astro"
-import HeaderMeta from "./HeaderMeta.astro"
-import '@fontsource-variable/open-sans'
+import "@/styles/global.css";
+import Footer from "@/components/Footer.astro";
+import Header from "@/components/Header.astro";
+import HeaderMeta from "./HeaderMeta.astro";
+import "@fontsource-variable/open-sans";
 
 interface Props {
-    title: string
+    title: string;
 }
 
-const {title: origTitle} = Astro.props;
+const { title: origTitle } = Astro.props;
 const title = origTitle;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="generator" content={Astro.generator}/>
-    <HeaderMeta/>
-    <title>{title}</title>
-    <slot name="meta" />
-</head>
-<body class="flex flex-col min-h-screen max-w-4xl font-sans mx-4 lg:mx-auto xl:mx-auto leading-normal">
-<Header/>
-<main class="flex-1 text-gray-900">
-    <slot/>
-</main>
-<Footer/>
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="generator" content={Astro.generator} />
+        <HeaderMeta />
+        <title>{title}</title>
+        <slot name="meta" />
+    </head>
+    <body
+        class="flex flex-col min-h-screen max-w-4xl font-sans mx-4 lg:mx-auto xl:mx-auto leading-normal"
+    >
+        <Header />
+        <main class="flex-1 text-gray-900">
+            <slot />
+        </main>
+        <Footer />
+    </body>
 </html>

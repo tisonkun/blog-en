@@ -1,31 +1,32 @@
 ---
-import type {CollectionEntry} from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import {titleCase} from "title-case";
+import { titleCase } from "title-case";
 import _ from "lodash";
 import PageMeta from "@/components/PageMeta.astro";
 import PostList from "@/components/PostList.astro";
-import {getListedPosts} from "@/lib/post";
+import { getListedPosts } from "@/lib/post";
 
 interface Props {
-    posts: CollectionEntry<'posts'>[]
-    category: string,
+    posts: CollectionEntry<"posts">[];
+    category: string;
 }
 
 export async function getStaticPaths() {
-    const posts = await getListedPosts()
-    const categories = _.groupBy(posts, (entry) => entry.data.category)
+    const posts = await getListedPosts();
+    const categories = _.groupBy(posts, (entry) => entry.data.category);
     return _.entries(categories).map(([category, posts]) => ({
-        params: {category: category}, props: {posts, category}
-    }))
+        params: { category: category },
+        props: { posts, category },
+    }));
 }
 
-const {posts, category} = Astro.props;
-const title = titleCase(category)
+const { posts, category } = Astro.props;
+const title = titleCase(category);
 ---
 
 <BaseLayout title={title}>
-    <PageMeta title={title} slot="meta"/>
+    <PageMeta title={title} slot="meta" />
     <h1 class="text-center text-5xl">{title}</h1>
-    <PostList posts={posts}/>
+    <PostList posts={posts} />
 </BaseLayout>

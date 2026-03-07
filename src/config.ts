@@ -7,10 +7,10 @@ export const Site = {
 
     menu: {
         navs: [
-            {name: "Home", url: "/"},
-            {name: "Categories", url: "/categories"},
-            {name: "Tags", url: "/tags"},
-            {name: "About", url: "/about"},
+            { name: "Home", url: "/" },
+            { name: "Categories", url: "/categories" },
+            { name: "Tags", url: "/tags" },
+            { name: "About", url: "/about" },
         ],
         icons: [
             {

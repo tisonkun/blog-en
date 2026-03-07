@@ -1,29 +1,35 @@
 ---
-import {getListedPosts} from "@/lib/post";
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import _ from 'lodash'
+import { getListedPosts } from "@/lib/post";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import _ from "lodash";
 import PageMeta from "@/components/PageMeta.astro";
 
 const posts = await getListedPosts();
-const categories = posts.map((entry) => entry.data.category)
-const categoryCounts = _.countBy(categories)
+const categories = posts.map((entry) => entry.data.category);
+const categoryCounts = _.countBy(categories);
 const sortedCategories = _.chain(categoryCounts)
-.map((count, category) => ({category, count}))
-.orderBy(["count", "category"], "desc")
-.value()
-const title = "Categories"
+    .map((count, category) => ({ category, count }))
+    .orderBy(["count", "category"], "desc")
+    .value();
+const title = "Categories";
 ---
 
 <BaseLayout title={title}>
-    <PageMeta title={title} slot="meta"/>
+    <PageMeta title={title} slot="meta" />
     <div class="mx-auto">
         <h1 class="text-center text-5xl">{title}</h1>
         <div class="mt-8">
-            {sortedCategories.map(({category, count}) => (
-                    <a class="border-6 m-2 rounded text-xl" href={`/categories/${category}`}>
-                        {category}<sup>{count}</sup>
+            {
+                sortedCategories.map(({ category, count }) => (
+                    <a
+                        class="border-6 m-2 rounded text-xl"
+                        href={`/categories/${category}`}
+                    >
+                        {category}
+                        <sup>{count}</sup>
                     </a>
-            ))}
+                ))
+            }
         </div>
     </div>
 </BaseLayout>

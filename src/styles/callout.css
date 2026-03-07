@@ -21,7 +21,7 @@
     font-weight: 600;
 }
 
-.callout-indicator > svg:first-of-type {
+.callout-indicator>svg:first-of-type {
     margin-right: 0.5rem;
     fill: none;
     stroke: currentColor;
@@ -45,12 +45,15 @@
 .callout-commend {
     --callout-bg-color: var(--callout-bg-tip);
 }
+
 .callout-warn {
     --callout-bg-color: var(--callout-bg-warning);
 }
+
 .callout-deter {
     --callout-bg-color: var(--callout-bg-danger);
 }
+
 .callout-assert {
     --callout-bg-color: var(--callout-bg-important);
 }

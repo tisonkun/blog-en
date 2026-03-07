@@ -1,4 +1,4 @@
-import {getCollection} from "astro:content";
+import { getCollection } from "astro:content";
 
 export async function getListedPosts() {
     const posts = await getAllPosts();

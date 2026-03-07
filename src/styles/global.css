@@ -28,11 +28,13 @@ h3 {
     @apply font-semibold mb-2 mt-6 text-xl;
 }
 
-h4, h5 {
+h4,
+h5 {
     @apply font-medium mb-2 mt-4 text-xl;
 }
 
-strong, b {
+strong,
+b {
     @apply font-bold;
 }
 
@@ -85,7 +87,7 @@ pre {
 }
 
 .post-content pre code {
-    @apply rounded bg-transparent px-0  font-normal whitespace-pre-wrap;
+    @apply rounded bg-transparent px-0 font-normal whitespace-pre-wrap;
 }
 
 .post-content ul {
@@ -165,4 +167,3 @@ figcaption {
         font-family: 'Open Sans Variable', sans-serif;
     }
 }
-

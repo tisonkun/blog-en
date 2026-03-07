@@ -1,12 +1,12 @@
 ---
 interface Props {
-    date: Date,
+    date: Date;
 }
 
-const {date} = Astro.props
-const dateMonth = date.toLocaleDateString('default', { month: 'short' })
-const dateYearMonth = `${dateMonth} ${date.getFullYear()}`
-const dateDayOfMonth = `${date.getDate()}`
+const { date } = Astro.props;
+const dateMonth = date.toLocaleDateString("default", { month: "short" });
+const dateYearMonth = `${dateMonth} ${date.getFullYear()}`;
+const dateDayOfMonth = `${date.getDate()}`;
 ---
 
 <div class="col-span-2 text-center">
