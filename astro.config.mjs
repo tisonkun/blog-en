@@ -13,6 +13,8 @@ import rehypeToc from "rehype-toc";
 
 import tailwindcss from "@tailwindcss/vite";
 
+import cloudflare from "@astrojs/cloudflare";
+
 const port = 4000;
 const isBuild = process.env.npm_lifecycle_script?.includes("astro build");
 const baseUrl = isBuild ? 'https://tisonkun.io' : `http://localhost:${port}`;
@@ -20,51 +22,53 @@ const baseUrl = isBuild ? 'https://tisonkun.io' : `http://localhost:${port}`;
 
 // https://astro.build/config
 export default defineConfig({
-    server: {
-        port: port
-    },
+  server: {
+      port: port
+  },
 
-    markdown: {
-        remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
-            aliases: {
-                info: "assert",
-                commend: "tip"
-            },
-            callouts: {
-                commend: {
-                    title: "Tip"
-                },
-                assert: {
-                    title: "Info"
-                }
-            }
-        }], [remarkToc, { tight: true, ordered: false }]],
-        rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, {
-            behavior: 'append',
-            content(_node) {
-                return [h('i.fa-solid.fa-link.header-link')]
-            },
-        }], [rehypeToc, {
-            headings: ["h2"],
-            cssClasses: {
-                toc: "toc-post",
-                link: "toc-link",
-            },
-        }]],
-    },
+  markdown: {
+      remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
+          aliases: {
+              info: "assert",
+              commend: "tip"
+          },
+          callouts: {
+              commend: {
+                  title: "Tip"
+              },
+              assert: {
+                  title: "Info"
+              }
+          }
+      }], [remarkToc, { tight: true, ordered: false }]],
+      rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, {
+          behavior: 'append',
+          content(_node) {
+              return [h('i.fa-solid.fa-link.header-link')]
+          },
+      }], [rehypeToc, {
+          headings: ["h2"],
+          cssClasses: {
+              toc: "toc-post",
+              link: "toc-link",
+          },
+      }]],
+  },
 
-    site: baseUrl,
+  site: baseUrl,
 
-    integrations: [
-        sitemap(),
-        expressiveCode({
-            themes: ['solarized-light'],
-            plugins: [pluginLineNumbers()],
-        }),
-        mdx(),
-    ],
+  integrations: [
+      sitemap(),
+      expressiveCode({
+          themes: ['solarized-light'],
+          plugins: [pluginLineNumbers()],
+      }),
+      mdx(),
+  ],
 
-    vite: {
-        plugins: [tailwindcss()]
-    }
+  vite: {
+      plugins: [tailwindcss()]
+  },
+
+  adapter: cloudflare()
 });
