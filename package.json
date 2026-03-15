@@ -11,15 +11,15 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.6",
-    "@astrojs/cloudflare": "^12.6.12",
-    "@astrojs/mdx": "^4.3.13",
-    "@astrojs/rss": "^4.0.15",
-    "@astrojs/sitemap": "^3.7.0",
+    "@astrojs/check": "^0.9.7",
+    "@astrojs/cloudflare": "^13.1.1",
+    "@astrojs/mdx": "^5.0.0",
+    "@astrojs/rss": "^4.0.17",
+    "@astrojs/sitemap": "^3.7.1",
     "@expressive-code/plugin-line-numbers": "^0.41.7",
     "@fontsource-variable/open-sans": "^5.2.7",
     "@microflash/remark-callout-directives": "^5.0.0",
-    "astro": "^5.18.0",
+    "astro": "^6.0.4",
     "astro-expressive-code": "^0.41.7",
     "hastscript": "^9.0.1",
     "lodash": "^4.17.23",
@@ -30,7 +30,7 @@
     "remark-directive": "^4.0.0",
     "remark-toc": "^9.0.0",
     "sharp": "^0.34.5",
-    "shiki": "^4.0.1",
+    "shiki": "^4.0.2",
     "tailwindcss": "^4.2.1",
     "title-case": "^4.3.2",
     "typescript": "^5.9.3"
@@ -40,8 +40,8 @@
     "@tailwindcss/vite": "^4.2.1",
     "@types/lodash": "^4.17.24",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^25.3.5",
-    "wrangler": "^4.71.0"
+    "@types/node": "^25.5.0",
+    "wrangler": "^4.73.0"
   },
   "packageManager": "pnpm@10.30.3"
 }

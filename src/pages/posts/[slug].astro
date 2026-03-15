@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Giscus from "@/components/Giscus.astro";
 import PostMeta from "@/components/PostMeta.astro";
@@ -13,7 +14,7 @@ interface Props {
 export async function getStaticPaths() {
     const posts = await getAllPosts();
     return posts.map((entry) => ({
-        params: { slug: entry.slug },
+        params: { slug: entry.id },
         props: { entry },
     }));
 }
@@ -27,7 +28,7 @@ const category = entry.data.category;
 const tags = entry.data.tags;
 const frontmatter = entry.data;
 const ogImageAbsoluteUrl = `${Site.baseUrl}/images/og.png`;
-const { Content } = await entry.render();
+const { Content } = await render(entry);
 ---
 
 <BaseLayout title={title}>

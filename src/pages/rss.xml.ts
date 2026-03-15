@@ -1,8 +1,8 @@
 import _ from "lodash";
 import rss from '@astrojs/rss';
-import {Site} from "@/config.ts";
-import type {APIContext} from "astro";
-import {getCollection} from "astro:content";
+import { Site } from "@/config.ts";
+import type { APIContext } from "astro";
+import { getCollection } from "astro:content";
 
 export async function GET(_ctx: APIContext) {
     const posts = await getCollection('posts');
@@ -17,8 +17,8 @@ export async function GET(_ctx: APIContext) {
         const title = entry.data.title
         const pubDate = entry.data.date
         const description = entry.data.description
-        const link = `${baseUrl}/posts/${entry.slug}`;
-        return {title, pubDate, description, link};
+        const link = `${baseUrl}/posts/${entry.id}`;
+        return { title, pubDate, description, link };
     });
 
     return rss({
