@@ -1,6 +1,6 @@
 ---
 slug: ai-repair-program
-title: "Reconstructing a Late Computer Scientist's Lost Code with Gemini"
+title: "Reverse-Engineering Kevin J. Lang's Lost OCaml Code in Apache DataSketches"
 date: 2026-11-16
 description: >
     Another feat from Gemini 4 Carbon Orchestrator + Swarm: reconstructing the magic lookup table generators behind CpcSketch in Apache DataSketches.
@@ -123,19 +123,19 @@ That placed the derivation well beyond what I could work out on my own in an aft
 
 Since CpcSketch worked fine in datasketches-rust as long as the lookup arrays were copied faithfully, I left the mystery aside for the time being.
 
-Then Gemini 4 Carbon came out just as I was preparing the next release of datasketches-rust. It struck me that frontier LLMs might now be capable of reverse-engineering the math and generators behind those tables, so I gave it a shot.
+Then Gemini 4 Carbon came out just as I was preparing the next release of datasketches-rust. Since the checked-in tables and 20-digit header comments already acted as a strict numerical oracle, any candidate generator could be tested immediately in code: either it reproduced every codeword, permutation entry, and floating-point diagnostic within IEEE-754 precision, or it was wrong. That made the problem well suited to an agentic workflow built around executable checks and adversarial review.
 
-What followed became a multi-round relay across three models:
+Over several iterations, I steered three models against that oracle and against one another:
 
-1. **Gemini 4 Carbon** worked from the static tables and source comments from scratch, built the initial generator test harness, reproduced every Huffman codeword and column permutation bit-for-bit, and reconstructed the ICON polynomial fits to matching accuracy.
-2. **Claude Opus 5.5** reviewed and stress-tested the initial findings mathematically: it disproved an early "left-edge truncation" hypothesis through controlled ablations, caught a floating-point rounding trap, mapped out the polynomial fit identifiability boundaries, and re-ran the million-trial Monte Carlo statistics.
-3. **GPT 6 Astra** ran another round of cross-verification, exposed two test-coverage gaps through mutation testing, caught several subtle mathematical slips and overstatements in earlier drafts, and supplied an exact closed-form explanation for the trailing digits of the asymptotic exponential constant.
+1. **Initial synthesis (Gemini 4 Carbon)**: Starting from the static arrays and source comments, it wrote executable probes and built the first constructive test harness, reproducing the Huffman codewords and column permutations bit-for-bit and fitting the ICON polynomials to matching accuracy.
+2. **Mathematical falsification (Claude Opus 5.5)**: Tasked with breaking those initial claims, it ran controlled ablations that disproved an early "left-edge truncation" explanation, isolated an `f64` cancellation trap, mapped out where the polynomial fits stop being identifiable, and re-ran the million-trial Monte Carlo statistics.
+3. **Mutation and analytical audit (GPT 6 Astra)**: Auditing both the tests and the derivations, it used mutation testing to expose two tautological assertions, caught several mathematical overstatements in earlier drafts, and derived a closed-form expression matching the trailing digits of the asymptotic exponential constant.
 
-Of course, the real process took several back-and-forth passes as the models challenged and cross-checked one another. The result was [PR-355](https://github.com/apache/datasketches-rust/pull/355), which captures the reconstructed generators and derivations as unit tests in datasketches-rust, following the same approach we took for `kxp_byte_lookup`.
+None of the models got everything right on the first try, and several plausible-looking explanations collapsed as soon as we tested perturbations in code. What survived that filter became [PR-355](https://github.com/apache/datasketches-rust/pull/355), which checks the reconstructed generators and derivations into datasketches-rust as unit tests, following the same approach we took for `kxp_byte_lookup`.
 
 ![https://github.com/apache/datasketches-rust/pull/355](./cpc-sketch-pr-355.png "w=720")
 
-Here is the full write-up once the dust settled, walking table by table through the mathematical structure along with the most instructive wrong turns along the way. To keep the narrative readable, formal derivations sit in the appendix at the end. Since LLM agents assisted with these derivations, feel free to leave a comment or open a PR on datasketches-rust if you spot any error.
+The rest of this post focuses on the mathematics and numerical forensics behind those four sets of tables: how each structure works, which wrong turns looked convincing until an ablation broke them, and where the surviving artifacts cannot tell two models apart. Formal derivations sit in the appendix at the end; if you spot an error, feel free to leave a comment or open a PR on datasketches-rust.
 
 ## The Blind Spot of Discrete Codewords, and a 20-Digit Fingerprint
 
