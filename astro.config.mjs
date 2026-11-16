@@ -9,7 +9,6 @@ import expressiveCode from "astro-expressive-code";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { h } from "hastscript";
 import remarkToc from "remark-toc";
-import rehypeToc from "rehype-toc";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
 import { rehypeFigure } from "./src/plugins/rehype-figure.mjs";
@@ -47,12 +46,6 @@ export default defineConfig({
             behavior: 'append',
             content(_node) {
                 return [h('i.fa-solid.fa-link.header-link')]
-            },
-        }], [rehypeToc, {
-            headings: ["h2"],
-            cssClasses: {
-                toc: "toc-post",
-                link: "toc-link",
             },
         }]],
     },

@@ -1,0 +1,376 @@
+---
+import ShareButtons from "./ShareButtons.astro";
+
+interface HeadingItem {
+    depth: number;
+    slug: string;
+    text: string;
+}
+
+interface Props {
+    headings: HeadingItem[];
+    title: string;
+    shareUrl: string;
+}
+
+const { headings, title, shareUrl } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<aside class="post-sidebar-rail" aria-label="On this page">
+    <div class="post-sidebar-sticky">
+        {
+            tocHeadings.length > 0 && (
+                <div class="post-toc-block">
+                    <p class="post-toc-eyebrow">On this page</p>
+                    <nav class="post-toc-nav" data-toc-nav aria-label="Table of contents">
+                        <ul class="post-toc-list">
+                            {tocHeadings.map((h) => (
+                                <li class="post-toc-item">
+                                    <a
+                                        class={
+                                            h.depth === 3
+                                                ? "post-toc-link is-h3"
+                                                : "post-toc-link"
+                                        }
+                                        href={`#${h.slug}`}
+                                        data-toc-link={h.slug}
+                                    >
+                                        {h.text}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                </div>
+            )
+        }
+        <div class:list={["post-sidebar-share", { "has-toc": tocHeadings.length > 0 }]}>
+            <ShareButtons title={title} shareUrl={shareUrl} />
+        </div>
+    </div>
+</aside>
+
+{
+    tocHeadings.length > 0 && (
+        <div class="post-mobile-toc-wrap">
+            <div
+                id="post-mobile-popover"
+                class="post-mobile-popover fixed bottom-16 right-5 z-40 w-72 max-h-[65vh] overflow-y-auto rounded-lg border border-gray-200 bg-white/95 backdrop-blur p-4 shadow-lg"
+                role="dialog"
+                aria-label="Table of contents"
+                hidden
+            >
+                <p class="post-toc-eyebrow">On this page</p>
+                <ul class="post-toc-list">
+                    {tocHeadings.map((h) => (
+                        <li class="post-toc-item">
+                            <a
+                                class={h.depth === 3 ? "post-toc-link is-h3" : "post-toc-link"}
+                                href={`#${h.slug}`}
+                                data-toc-link={h.slug}
+                            >
+                                {h.text}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+                <div class="post-sidebar-share has-toc">
+                    <ShareButtons title={title} shareUrl={shareUrl} />
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="post-mobile-toc-btn"
+                class="post-mobile-toc-btn fixed bottom-5 right-5 z-40 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 backdrop-blur px-3.5 py-2 text-xs font-medium text-gray-700 shadow-md hover:border-gray-300 hover:text-gray-900"
+                aria-expanded="false"
+                aria-controls="post-mobile-popover"
+            >
+                <svg
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    aria-hidden="true"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                <span>Contents</span>
+            </button>
+        </div>
+    )
+}
+
+<style>
+    .post-sidebar-sticky {
+        position: sticky;
+        top: 2rem;
+    }
+
+    .post-toc-eyebrow {
+        margin: 0 0 0.6rem;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        line-height: 1.3;
+    }
+
+    .post-toc-nav {
+        max-height: calc(100vh - 11.5rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 0.25rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 163, 175, 0.35) transparent;
+    }
+
+    .post-toc-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-left: 1px solid #e5e7eb;
+    }
+
+    .post-toc-item {
+        margin: 0;
+        padding: 0;
+    }
+
+    .post-toc-link {
+        display: block;
+        border-left: 2px solid transparent;
+        margin-left: -1px;
+        padding: 0.26rem 0 0.26rem 0.85rem;
+        font-size: 13px;
+        line-height: 1.42;
+        color: #6b7280;
+        text-decoration: none;
+        overflow-wrap: break-word;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
+    }
+
+    .post-toc-link.is-h3 {
+        padding-left: 1.55rem;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #9ca3af;
+    }
+
+    .post-toc-link:hover {
+        color: #111827;
+    }
+
+    .post-toc-link.is-active {
+        border-left-color: #2563eb;
+        color: #2563eb;
+        font-weight: 500;
+    }
+
+    .post-toc-link.is-active:hover {
+        color: #1d4ed8;
+    }
+
+    .post-sidebar-share.has-toc {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(17, 24, 39, 0.1);
+    }
+
+    .post-mobile-popover[hidden] {
+        display: none;
+    }
+
+    .post-mobile-toc-btn {
+        cursor: pointer;
+    }
+
+    @media (min-width: 1120px) {
+        .post-mobile-toc-wrap {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // 1. Update external share links on deployed non-localhost origins.
+    const isLocalHost =
+        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (!isLocalHost) {
+        const liveUrl = window.location.origin + window.location.pathname;
+        const encodedUrl = encodeURIComponent(liveUrl);
+
+        document.querySelectorAll<HTMLElement>("[data-share-root]").forEach((root) => {
+            const rawTitle = root.dataset.shareTitle || document.title;
+            const encodedTitle = encodeURIComponent(rawTitle);
+            root.querySelectorAll<HTMLAnchorElement>("[data-share-platform]").forEach((link) => {
+                const platform = link.dataset.sharePlatform;
+                if (platform === "x") {
+                    link.href = `https://x.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`;
+                } else if (platform === "linkedin") {
+                    link.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+                } else if (platform === "hn") {
+                    link.href = `https://news.ycombinator.com/submitlink?u=${encodedUrl}&t=${encodedTitle}`;
+                } else if (platform === "reddit") {
+                    link.href = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+                }
+            });
+        });
+    }
+
+    // 2. Copy link button handling across desktop rail, inline bar, and mobile popover.
+    const copyTimers = new WeakMap<HTMLElement, number>();
+    document.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const copyBtn = target.closest<HTMLButtonElement>("[data-copy-link]");
+        if (!copyBtn) return;
+
+        if (!navigator.clipboard?.writeText) return;
+        const cleanUrl = window.location.origin + window.location.pathname;
+        try {
+            await navigator.clipboard.writeText(cleanUrl);
+        } catch {
+            return;
+        }
+
+        const root = copyBtn.closest("[data-share-root]");
+        const statusEl = root?.querySelector<HTMLElement>("[data-share-status]");
+        copyBtn.dataset.copied = "true";
+        statusEl?.classList.add("is-visible");
+
+        const prevTimer = copyTimers.get(copyBtn);
+        if (prevTimer !== undefined) {
+            window.clearTimeout(prevTimer);
+        }
+        const timer = window.setTimeout(() => {
+            delete copyBtn.dataset.copied;
+            statusEl?.classList.remove("is-visible");
+            copyTimers.delete(copyBtn);
+        }, 1800);
+        copyTimers.set(copyBtn, timer);
+    });
+
+    // 3. Scroll-spy for section headings in .post-content.
+    const contentHeadings = Array.from(
+        document.querySelectorAll<HTMLElement>(".post-content h2[id], .post-content h3[id]"),
+    );
+    const tocLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]"));
+    const desktopTocNav = document.querySelector<HTMLElement>("[data-toc-nav]");
+
+    if (contentHeadings.length > 0 && tocLinks.length > 0) {
+        let currentActiveId = "";
+        let spyScheduled = false;
+
+        const updateActiveHeading = () => {
+            spyScheduled = false;
+            let nextActiveId = "";
+
+            for (const heading of contentHeadings) {
+                if (heading.getBoundingClientRect().top <= 120) {
+                    nextActiveId = heading.id;
+                } else {
+                    break;
+                }
+            }
+
+            if (
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 24
+            ) {
+                nextActiveId = contentHeadings[contentHeadings.length - 1].id;
+            }
+
+            if (nextActiveId === currentActiveId) return;
+            currentActiveId = nextActiveId;
+
+            for (const link of tocLinks) {
+                link.classList.toggle("is-active", link.dataset.tocLink === currentActiveId);
+            }
+
+            if (desktopTocNav && currentActiveId) {
+                const activeDesktopLink = desktopTocNav.querySelector<HTMLElement>(
+                    `[data-toc-link].is-active`,
+                );
+                if (activeDesktopLink) {
+                    const navRect = desktopTocNav.getBoundingClientRect();
+                    const linkRect = activeDesktopLink.getBoundingClientRect();
+                    if (linkRect.top < navRect.top + 8 || linkRect.bottom > navRect.bottom - 8) {
+                        const targetTop =
+                            linkRect.top -
+                            navRect.top +
+                            desktopTocNav.scrollTop -
+                            desktopTocNav.clientHeight / 2 +
+                            linkRect.height / 2;
+                        desktopTocNav.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+                    }
+                }
+            }
+        };
+
+        const scheduleSpy = () => {
+            if (!spyScheduled) {
+                spyScheduled = true;
+                window.requestAnimationFrame(updateActiveHeading);
+            }
+        };
+
+        window.addEventListener("scroll", scheduleSpy, { passive: true });
+        window.addEventListener("resize", scheduleSpy, { passive: true });
+        updateActiveHeading();
+    }
+
+    // 4. Narrow-viewport floating Contents popover toggle.
+    const mobileBtn = document.getElementById("post-mobile-toc-btn") as HTMLButtonElement | null;
+    const mobilePopover = document.getElementById("post-mobile-popover") as HTMLDivElement | null;
+
+    if (mobileBtn && mobilePopover) {
+        const setPopoverOpen = (open: boolean) => {
+            mobilePopover.hidden = !open;
+            mobileBtn.setAttribute("aria-expanded", String(open));
+        };
+
+        mobileBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            setPopoverOpen(mobilePopover.hidden);
+        });
+
+        mobilePopover.addEventListener("click", (event) => {
+            const target = event.target;
+            if (target instanceof Element && target.closest("[data-toc-link]")) {
+                setPopoverOpen(false);
+            }
+        });
+
+        document.addEventListener("click", (event) => {
+            if (mobilePopover.hidden) return;
+            const target = event.target;
+            if (
+                target instanceof Node &&
+                !mobilePopover.contains(target) &&
+                !mobileBtn.contains(target)
+            ) {
+                setPopoverOpen(false);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !mobilePopover.hidden) {
+                setPopoverOpen(false);
+            }
+        });
+    }
+</script>

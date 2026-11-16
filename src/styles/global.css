@@ -200,3 +200,54 @@ figcaption {
 .header-link {
     @apply float-right text-gray-500;
 }
+
+.post-content :is(h2, h3, h4) {
+    scroll-margin-top: 1.75rem;
+}
+
+.post-main {
+    min-width: 0;
+}
+
+.post-sidebar-rail {
+    display: none;
+}
+
+.post-inline-share {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(17, 24, 39, 0.1);
+}
+
+@media (min-width: 1120px) {
+    .post-sidebar-rail {
+        display: block;
+    }
+
+    .post-inline-share {
+        display: none;
+    }
+}
+
+@media (min-width: 1120px) and (max-width: 1499px) {
+    .post-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 216px;
+        column-gap: 2.25rem;
+        align-items: stretch;
+    }
+}
+
+@media (min-width: 1500px) {
+    .post-layout {
+        position: relative;
+    }
+
+    .post-sidebar-rail {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(100% + 1.5rem);
+        width: clamp(204px, calc((100vw - 56rem) / 2 - 2.75rem), 248px);
+    }
+}
