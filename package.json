@@ -42,7 +42,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "@types/lodash": "^4.17.27",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^25.9.9",
+    "@types/node": "^26.6.6",
     "wrangler": "^4.162.0"
   },
   "engines": {
