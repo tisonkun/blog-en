@@ -32,15 +32,29 @@ for (const h of headings) {
 
 {
     groups.length > 0 && (
-        <aside class="post-toc-rail" aria-label="Table of contents">
-            <nav class="post-toc-sticky" data-toc-nav>
+        <aside class="post-toc-rail" aria-label="On this page">
+            <nav class="post-toc-sticky" data-toc-nav aria-label="On this page">
+                <div class="post-toc-header">
+                    <svg
+                        viewBox="0 0 16 16"
+                        width="13"
+                        height="13"
+                        aria-hidden="true"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                    >
+                        <path d="M2.5 4h11M2.5 8h7.5M2.5 12h9.5" />
+                    </svg>
+                    <span>On this page</span>
+                </div>
                 <ul class="post-toc-list">
                     {groups.map((group) => (
                         <li class="post-toc-group" data-toc-group={group.item.slug}>
                             <a
                                 class="post-toc-link"
                                 href={`#${group.item.slug}`}
-                                title={group.item.text}
                                 data-toc-link={group.item.slug}
                             >
                                 {group.item.text}
@@ -52,7 +66,6 @@ for (const h of headings) {
                                             <a
                                                 class="post-toc-sublink"
                                                 href={`#${child.slug}`}
-                                                title={child.text}
                                                 data-toc-link={child.slug}
                                                 data-toc-parent={group.item.slug}
                                             >
@@ -73,15 +86,32 @@ for (const h of headings) {
 <style>
     .post-toc-sticky {
         position: sticky;
-        top: 3rem;
-        max-height: calc(100vh - 6rem);
+        top: 2.5rem;
+        max-height: calc(100vh - 5rem);
         overflow-y: auto;
         overscroll-behavior: contain;
+        padding-top: 0.15rem;
         scrollbar-width: none;
     }
 
     .post-toc-sticky::-webkit-scrollbar {
         display: none;
+    }
+
+    .post-toc-header {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0 0 0.65rem;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: #374151;
+    }
+
+    .post-toc-header svg {
+        color: #6b7280;
+        flex-shrink: 0;
     }
 
     .post-toc-list,
@@ -91,6 +121,10 @@ for (const h of headings) {
         list-style: none;
     }
 
+    .post-toc-list {
+        border-left: 1px solid #e5e7eb;
+    }
+
     .post-toc-group {
         margin: 0;
         padding: 0;
@@ -98,19 +132,20 @@ for (const h of headings) {
 
     .post-toc-link {
         display: block;
-        padding: 0.3rem 0;
+        margin-left: -1px;
+        border-left: 1.5px solid transparent;
+        padding: 0.3rem 0 0.3rem 0.85rem;
         font-size: 13px;
-        line-height: 1.45;
-        color: #9ca3af;
+        line-height: 1.42;
+        color: #6b7280;
         text-decoration: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: color 150ms ease;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
     }
 
     .post-toc-link:hover {
-        color: #4b5563;
+        color: #111827;
     }
 
     .post-toc-link.is-parent-active {
@@ -119,14 +154,14 @@ for (const h of headings) {
     }
 
     .post-toc-link.is-active {
+        border-left-color: #111827;
         color: #111827;
         font-weight: 600;
     }
 
     .post-toc-sublist {
         display: none;
-        padding-left: 0.85rem;
-        margin: 0.1rem 0 0.3rem;
+        margin: 0.1rem 0 0.25rem;
     }
 
     .post-toc-group.is-expanded .post-toc-sublist {
@@ -135,22 +170,24 @@ for (const h of headings) {
 
     .post-toc-sublink {
         display: block;
-        padding: 0.22rem 0;
-        font-size: 12px;
-        line-height: 1.45;
-        color: #a3a3a3;
+        margin-left: -1px;
+        border-left: 1.5px solid transparent;
+        padding: 0.22rem 0 0.22rem 1.5rem;
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: #6b7280;
         text-decoration: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: color 150ms ease;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
     }
 
     .post-toc-sublink:hover {
-        color: #4b5563;
+        color: #111827;
     }
 
     .post-toc-sublink.is-active {
+        border-left-color: #111827;
         color: #111827;
         font-weight: 500;
     }
