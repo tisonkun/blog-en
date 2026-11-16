@@ -72,7 +72,7 @@ static HIP_LOW_SIDE_DATA: [u16; 33] = [ /* ... */ ];
 static HIP_HIGH_SIDE_DATA: [u16; 33] = [ /* ... */ ];
 ```
 
-When porting simpler lookup tables, I like to derive the values from first principles in unit tests and check them element by element against the static array. For `kxp_byte_lookup`, for example, I kept the derivation right inside the test suite:
+Whenever I port lookup tables, I prefer to derive the values from first principles in unit tests and check them element by element against the static array. For `kxp_byte_lookup`, for example, I kept the derivation right inside the test suite:
 
 ```rust
 for byte in 0u8..=255 {
@@ -93,7 +93,7 @@ for byte in 0u8..=255 {
 }
 ```
 
-For `CompressionData` and the ICON estimator tables, though, no generator source existed anywhere in the repositories. Only two build commands remained in an upstream comment:
+For `CompressionData` and the ICON estimator tables, though, no generator source existed anywhere in the repositories, so I had no way to derive them on my own back then. Only two build commands remained in an upstream comment:
 
 ```sh
 ~/ocaml-4.03.0/bin/ocamlopt -o generateHuffmanCodes columnProbabilities.ml generateHuffmanCodes.ml
