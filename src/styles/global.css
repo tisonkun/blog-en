@@ -110,27 +110,35 @@
 }
 
 .post-content ul {
-    @apply list-inside list-disc;
+    @apply my-5 list-outside list-disc pl-6;
 }
 
-.post-content ul li {
-    @apply relative pl-6;
-}
-
-.post-content ul li p {
-    @apply inline-block p-0 m-0;
+.post-content ul ul {
+    list-style-type: circle;
 }
 
 .post-content ol {
-    @apply list-inside list-decimal;
+    @apply my-5 list-outside list-decimal pl-6;
 }
 
-.post-content ol li {
-    @apply relative pl-6;
+.post-content :is(ul, ol) > li {
+    @apply my-2.5 pl-1 leading-relaxed;
 }
 
-.post-content ol li p {
-    @apply inline-block p-0 m-0;
+.post-content :is(ul, ol) > li > :is(ul, ol) {
+    @apply mt-2 mb-1 space-y-1.5;
+}
+
+.post-content :is(ul, ol) > li > p {
+    @apply my-2;
+}
+
+.post-content :is(ul, ol) > li > p:first-child {
+    @apply mt-0;
+}
+
+.post-content :is(ul, ol) > li > p:last-child {
+    @apply mb-0;
 }
 
 .post-content img {
