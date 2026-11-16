@@ -100,7 +100,7 @@ For `CompressionData` and the ICON estimator tables, though, no generator source
 ./generateHuffmanCodes > raw-encoding-tables.c
 ```
 
-I searched every Apache DataSketches repository and came up empty on those `.ml` files. So I opened [Issue-720](https://github.com/apache/datasketches-java/issues/720) on `datasketches-java` to ask where the generator sources lived. Lee Rhodes replied:
+I searched every Apache DataSketches repository and came up empty on those `.ml` files. So I opened [ISSUE-720](https://github.com/apache/datasketches-java/issues/720) on `datasketches-java` to ask where the generator sources lived. Lee Rhodes replied:
 
 > Kevin did most of his math simulations and modeling in OCaml. And his code was on his computer, which no longer exists. And his personal code died with him … even if they have a copy of his old computer it might be trying to find a needle in a haystack.
 
@@ -302,7 +302,7 @@ To be clear, the million-trial Monte Carlo simulator and raw trial outputs were 
 
 ## What the Evidence Can and Cannot Prove: Six Open Questions
 
-The reconstructed generators, closed-form constants, and hardened tests have been merged upstream in [`PR-355`](https://github.com/apache/datasketches-rust/pull/355).
+The reconstructed generators, closed-form constants, and hardened tests have been merged upstream in [PR-355](https://github.com/apache/datasketches-rust/pull/355).
 
 Writing those unit tests underscored an important engineering lesson: **never write tautological tests**. An earlier draft verified the asymptotic constant against a second hardcoded copy inside the test file, and checked confidence bounds only by testing whether they bracketed the point estimate. Simple mutation testing exposed both gaps immediately: changing the production constant to a coarse `0.794024` or zeroing out all 132 confidence-table entries still passed every test. We hardened the merged tests in two ways: the constant test calls production code directly to compare the runtime constant against the closed form, and the confidence-table test asserts strict monotonicity of interval width with `kappa` while stating its verification limits explicitly in comments. Today, all 23 Huffman tables and 16 permutation tables have bit-exact constructive tests, whereas the Monte Carlo confidence tables clearly document that unit tests do not verify empirical cell values or true coverage.
 
