@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import sitemap from "@astrojs/sitemap";
 import mdx from "@astrojs/mdx";
+import { unified } from "@astrojs/markdown-remark";
 import remarkDirective from "remark-directive";
 import remarkCalloutDirectives from '@microflash/remark-callout-directives';
 import rehypeSlug from 'rehype-slug';
@@ -25,31 +26,35 @@ export default defineConfig({
         port: port
     },
 
+    session: false,
+
     redirects: {
         '/posts/oss-twin': 'https://www.scopedb.io/blog/insight-in-no-time',
     },
 
     markdown: {
-        remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
-            aliases: {
-                info: "assert",
-                commend: "tip"
-            },
-            callouts: {
-                commend: {
-                    title: "Tip"
+        processor: unified({
+            remarkPlugins: [remarkDirective, [remarkCalloutDirectives, {
+                aliases: {
+                    info: "assert",
+                    commend: "tip"
                 },
-                assert: {
-                    title: "Info"
+                callouts: {
+                    commend: {
+                        title: "Tip"
+                    },
+                    assert: {
+                        title: "Info"
+                    }
                 }
-            }
-        }], remarkMath, [remarkToc, { tight: true, ordered: false }]],
-        rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeKatex, { strict: "error" }], [rehypeAutolinkHeadings, {
-            behavior: 'append',
-            content(_node) {
-                return [h('i.fa-solid.fa-link.header-link')]
-            },
-        }]],
+            }], remarkMath, [remarkToc, { tight: true, ordered: false }]],
+            rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeKatex, { strict: "error" }], [rehypeAutolinkHeadings, {
+                behavior: 'append',
+                content(_node) {
+                    return [h('i.fa-solid.fa-link.header-link')]
+                },
+            }]],
+        }),
     },
 
     site: baseUrl,
