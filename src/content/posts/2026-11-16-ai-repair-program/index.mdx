@@ -18,13 +18,13 @@ It started with a routine feature in ScopeDB: implementing `approx_count_distinc
 
 HyperLogLog (HLL) is the standard textbook choice. Early on, Rust's HLL ecosystem was uneven, so I started with Cloudflare's open-source [cardinality-estimator](https://github.com/cloudflare/cardinality-estimator). That crate leaned heavily on `unsafe` code and manual bit-packing tricks, though, so to keep things auditable and under our control, I forked and maintained an internal copy inside ScopeDB.
 
-While evaluating alternatives, I came across Apache DataSketches, which offered a battle-tested HllSketch alongside CpcSketch — an even more space-efficient design. At the time, Apache DataSketches only shipped Java and C++ implementations, whereas ScopeDB is written in Rust.
+While evaluating alternatives, I came across Apache DataSketches, which offered a battle-tested HllSketch alongside CpcSketch, an even more space-efficient design. At the time, Apache DataSketches only shipped Java and C++ implementations, whereas ScopeDB is written in Rust.
 
 As it turned out, the Apache DataSketches community was interested in an official Rust port. Starting late last year, I teamed up with a few other Rust developers well-versed in sketching algorithms to build and ship the initial releases of datasketches-rust, beginning with HllSketch. Soon after, I switched ScopeDB's distinct counting over to our datasketches-rust implementation.
 
 ![Apache DataSketches Rust Contributors](./datasketches-contributors.png "w=480")
 
-Anyone who has implemented streaming distinct counting knows how HLL works: elements are hashed into K buckets, and each bucket keeps only the maximum leading-zero count seen so far — typically 4 to 6 bits — while every other hit in that bucket goes unrecorded. Once HLL enters dense mode, every bucket maintains a fixed-width register.
+Anyone who has implemented streaming distinct counting knows how HLL works: elements are hashed into K buckets, and each bucket keeps only the maximum leading-zero count seen so far (typically 4 to 6 bits), while every other hit in that bucket goes unrecorded. Once HLL enters dense mode, every bucket maintains a fixed-width register.
 
 In his 2017 paper [Back to the Future: an Even More Nearly Optimal Cardinality Estimation Algorithm](https://arxiv.org/abs/1708.06839), Yahoo! Research scientist Kevin J. Lang proposed going back to basics: instead of keeping only per-bucket maxima, retain the full K × 64 bit matrix of the classic FM85 coupon collector's process. Whenever row r sees a hash with c leading zeros, set bit (r, c) to 1. Keeping the full two-dimensional hit matrix lets CPC pair a streaming HIP estimator with a mergeable ICON estimator for higher statistical efficiency than HLL. On serialization, it adapts its layout to fill density: low cardinalities use a sparse `PairTable` of (row, column) pairs, while medium and high cardinalities combine a sliding 8-bit window, length-limited Huffman coding, and column permutations to pack the sketch near the information-theoretic entropy limit. According to the DataSketches documentation, serialized CPC shrinks storage by 30% to 40% compared with HLL at equal accuracy.
 
@@ -111,7 +111,7 @@ Kevin passed away in April 2019, and any code left on his personal machine is ef
 I was saddened to hear that. Kevin's research in sketching algorithms underpins many of the core sketches in Apache DataSketches:
 
 - [A Framework for Estimating Stream Expression Cardinalities](https://arxiv.org/abs/1510.01455) (Theta Sketch)
-- [Optimal Quantile Approximation in Streams](https://arxiv.org/abs/1603.05346) (KLL Sketch — the "L" in KLL)
+- [Optimal Quantile Approximation in Streams](https://arxiv.org/abs/1603.05346) (KLL Sketch, the "L" in KLL)
 - [A High-Performance Algorithm for Identifying Frequent Items in Data Streams](https://arxiv.org/abs/1705.07001) (Frequent Items Sketch)
 - [Back to the Future: an Even More Nearly Optimal Cardinality Estimation Algorithm](https://arxiv.org/abs/1708.06839) (CPC Sketch and HLL estimators)
 
@@ -128,10 +128,10 @@ Then Gemini 4 Carbon came out just as I was preparing the next release of datask
 What followed became a multi-round relay across three models:
 
 1. **Gemini 4 Carbon** worked from the static tables and source comments from scratch, built the initial generator test harness, reproduced every Huffman codeword and column permutation bit-for-bit, and reconstructed the ICON polynomial fits to matching accuracy.
-2. **Claude Opus 5.5** reviewed and stress-tested the initial findings mathematically — disproving an early "left-edge truncation" hypothesis through controlled ablations, catching a floating-point rounding trap, mapping out the polynomial fit identifiability boundaries, and re-running the million-trial Monte Carlo statistics.
+2. **Claude Opus 5.5** reviewed and stress-tested the initial findings mathematically: it disproved an early "left-edge truncation" hypothesis through controlled ablations, caught a floating-point rounding trap, mapped out the polynomial fit identifiability boundaries, and re-ran the million-trial Monte Carlo statistics.
 3. **GPT 6 Astra** ran another round of cross-verification, exposed two test-coverage gaps through mutation testing, caught several subtle mathematical slips and overstatements in earlier drafts, and supplied an exact closed-form explanation for the trailing digits of the asymptotic exponential constant.
 
-Of course, the real process took several back-and-forth passes as the models challenged and cross-checked one another. The result was [PR-355](https://github.com/apache/datasketches-rust/pull/355), which captures the reconstructed generators and derivations as unit tests in datasketches-rust — the same approach we took for `kxp_byte_lookup`.
+Of course, the real process took several back-and-forth passes as the models challenged and cross-checked one another. The result was [PR-355](https://github.com/apache/datasketches-rust/pull/355), which captures the reconstructed generators and derivations as unit tests in datasketches-rust, following the same approach we took for `kxp_byte_lookup`.
 
 ![https://github.com/apache/datasketches-rust/pull/355](./cpc-sketch-pr-355.png "w=720")
 
@@ -141,7 +141,7 @@ Here is the full write-up once the dust settled, walking table by table through 
 
 We begin with the 23 Huffman coding tables in [`compression_data.rs`](https://github.com/apache/datasketches-rust/blob/0.6.0/datasketches/src/cpc/compression_data.rs).
 
-Why hardcode 23 static Huffman tables at all? Building trees dynamically per sketch would force the serializer to write tree headers into the compressed stream, wiping out the tens of bytes saved on small sketches. Meanwhile, the probability that column j of the coupon matrix is set depends mainly on the fill ratio C / K (collected coupons C over row count K), with finite-K corrections entering only at order 1 / K — a small gap that turns out to be the key clue below. Precomputing optimal tables offline across representative C / K checkpoints lets `determine_pseudo_phase` select the right table solely from `lg_k` and `num_coupons` without storing a table ID.
+Why hardcode 23 static Huffman tables at all? Building trees dynamically per sketch would force the serializer to write tree headers into the compressed stream, wiping out the tens of bytes saved on small sketches. Meanwhile, the probability that column j of the coupon matrix is set depends mainly on the fill ratio C / K (collected coupons C over row count K). Finite-K corrections enter only at order 1 / K, a tiny difference that turns out to be the key clue below. Precomputing optimal tables offline across representative C / K checkpoints lets `determine_pseudo_phase` select the right table solely from `lg_k` and `num_coupons` without storing a table ID.
 
 The first 22 tables encode 8-bit sliding-window bytes (0 through 255). Given the per-column bit probabilities q₀ through q₇ for the 8 adjacent columns in the window (treated as independent), byte b has theoretical probability equal to the product of eight Bernoulli terms: q<sub>d</sub> if bit d is 1, and 1 - q<sub>d</sub> if bit d is 0.
 
@@ -179,16 +179,16 @@ Look at the clean symmetry in that table: K = 2³¹ produces the exact same erro
 
 ## Steady-State Tables: The "Left-Edge Truncation" Mirage
 
-Moving to the 16 steady-state tables — covering phases phase = (2m + 1) / 32 at fill ratios C / K = B + phase — we ran into a convincing false lead.
+Moving to the 16 steady-state tables, which cover phases phase = (2m + 1) / 32 at fill ratios C / K = B + phase, we ran into a convincing false lead.
 
 The column permutation tables (covered next) establish that the steady-state integer baseline is B = 6. Yet plugging our newly recovered K = 2³² and B = 6 into the 16 steady-state tables leaves a **6.1 × 10⁻¹²** entropy residual in the 12th decimal place.
 
-At first glance, "left-edge truncation" looks like the obvious explanation: around C / K ≈ 6, column 1 of the coupon matrix is not quite 100% saturated, and its probability of still being 0 is roughly 5.3 × 10⁻¹² — right on the order of the residual. Sure enough, keeping K = 2³² fixed and pushing the working point out to B = 32 (C / K = 32 + phase) drops the entropy error to 10⁻¹⁵. Everything seemed to line up to the order of magnitude.
+At first glance, "left-edge truncation" looks like the obvious explanation: around C / K ≈ 6, column 1 of the coupon matrix is not quite 100% saturated, and its probability of still being 0 is roughly 5.3 × 10⁻¹², right on the order of the residual. Sure enough, keeping K = 2³² fixed and pushing the working point out to B = 32 (C / K = 32 + phase) drops the entropy error to 10⁻¹⁵. Everything seemed to line up to the order of magnitude.
 
 Two controlled ablations quickly ruled that hypothesis out:
 
 1. Holding B = 6 fixed while switching from the K = 2³² binomial model to the **K → ∞ Poisson limit** drops the error across all 16 steady-state tables to ~10⁻¹⁴, right down to double-precision rounding noise.
-2. Holding K = 2³² fixed while stepping B = 6, 7, 8 gives maximum entropy errors of 6.1 × 10⁻¹², 3.1 × 10⁻¹², and 1.5 × 10⁻¹² — **halving with every +1 step in B**.
+2. Holding K = 2³² fixed while stepping B = 6, 7, 8 gives maximum entropy errors of 6.1 × 10⁻¹², 3.1 × 10⁻¹², and 1.5 × 10⁻¹², **halving with every +1 step in B**.
 
 Why does it halve every time? Incrementing B by 1 shifts the 8-bit sliding window one column to the right, where the binomial correction relative to the Poisson limit decays as 1 / (2K · 2^j) ∝ 2^(-B) / K. Pushing B to 32 did nothing to left-edge truncation; it merely pushed the window out near column 29, shrinking the in-window finite-K correction 2⁻²⁹ / 2³² = 2⁻⁶¹ below `f64` machine epsilon and **inadvertently faking the K → ∞ Poisson limit with deep columns**.
 
@@ -198,13 +198,13 @@ How much effect can the left edge actually have? Even though the generator solve
 f₁₂₈(2λ) = f₁₂₈(λ) + (1 - exp(-λ)) - (1 - exp(-λ / 2¹²⁸))
 ```
 
-In other words, incrementing B by 1 doubles λ and shifts the window one column right, keeping in-window distributions nearly shift-invariant up to the left- and right-edge truncation terms. At C / K = 6 + 1/32 (λ ≈ 51.93), the left-edge term exp(-λ) is roughly 2.8 × 10⁻²³ (a ~2 × 10⁻²³ relative effect on λ), and the right-edge term 1 - exp(-λ / 2¹²⁸) is roughly 1.53 × 10⁻³⁷ — over ten and twenty orders of magnitude below the 10⁻¹² residual. The discrepancy came from finite K, not the left edge.
+In other words, incrementing B by 1 doubles λ and shifts the window one column right, keeping in-window distributions nearly shift-invariant up to the left- and right-edge truncation terms. At C / K = 6 + 1/32 (λ ≈ 51.93), the left-edge term exp(-λ) is roughly 2.8 × 10⁻²³ (a ~2 × 10⁻²³ relative effect on λ), and the right-edge term 1 - exp(-λ / 2¹²⁸) is roughly 1.53 × 10⁻³⁷. Both sit more than ten and twenty orders of magnitude below the 10⁻¹² residual. The discrepancy came from finite K, not the left edge.
 
 This also draws a sharp **identifiability boundary**. On the 16 steady-state tables alone, under the test's 3 × 10⁻¹⁴ tolerance, both the Poisson limit for 6 ≤ B ≤ 84 and the K = 2³² binomial model for 14 ≤ B ≤ 84 match every entropy and average-length header within tolerance. They are not bit-identical (still differing by ~10⁻¹⁴), only indistinguishable within double-precision arithmetic and that tolerance. Right at B = 84, the 128-column right-edge term has already grown exponentially to ~4.61 × 10⁻¹⁴; by B = 85, table 7's average-length error hits 3.11 × 10⁻¹⁴ and breaks tolerance; further right, right-edge truncation takes over completely, reaching 7.4 × 10⁻¹⁰ at B = 100. We chose the "B = 6 Poisson limit" model because it shares the exact working point of the column permutations without inventing an arbitrary B = 32, though the static tables by themselves cannot rule out the equivalent finite-K shifted interval.
 
 ## Column Permutations: A Rounding Trap at Phase 19/32
 
-In the steady-state regime, columns left of the sliding window are nearly all 1, while columns to the right are nearly all 0. The remaining 56 out-of-window columns therefore store only deviations from that baseline — **surprising bits** (zeros left of the window or ones right of the window) — encoded via column index deltas. Putting higher-probability surprising columns first keeps unary deltas short, which is what the 16 56-byte tables from `generatePermutationsForSLIDING.ml` accomplish.
+In the steady-state regime, columns left of the sliding window are nearly all 1, while columns to the right are nearly all 0. The remaining 56 out-of-window columns therefore store only **surprising bits**, namely zeros left of the window or ones right of the window, encoded via column index deltas. Putting higher-probability surprising columns first keeps unary deltas short, which is what the 16 56-byte tables from `generatePermutationsForSLIDING.ml` accomplish.
 
 First, their indexing scheme:
 
@@ -212,9 +212,9 @@ First, their indexing scheme:
 - The 56 canonical slots are ranked in descending order of surprising-bit probability.
 - Each static array stores `encode_perm[canon] = rank`, rather than listing columns in sorted order.
 
-That layout alone pins down B: in the first six tables (phase indices 0..5), three trailing slots correspond to columns left of the window and get interleaved upward; in the last ten tables, that count jumps to four. Since ω steps from B - 3 to B - 2 at phase 3/8, jumping from 3 to 4 settles B = 6. Testing candidates confirms it directly: B = 5, 6, and 7 match 6, 16, and 10 tables out of 16, respectively. Unlike the byte tables, sweeping K from 2⁸ to ∞ leaves all 16 permutation tables byte-for-byte identical — **column permutations are completely insensitive to K**.
+That layout alone pins down B: in the first six tables (phase indices 0..5), three trailing slots correspond to columns left of the window and get interleaved upward; in the last ten tables, that count jumps to four. Since ω steps from B - 3 to B - 2 at phase 3/8, jumping from 3 to 4 settles B = 6. Testing candidates confirms it directly: B = 5, 6, and 7 match 6, 16, and 10 tables out of 16, respectively. Unlike the byte tables, sweeping K from 2⁸ to ∞ leaves all 16 permutation tables byte-for-byte identical: **column permutations are completely insensitive to K**.
 
-Once B = 6 is fixed, a subtle numerical trap waits in p₀, the probability that a column left of the window remains 0. If you lazily compute `1.0 - q` from the already-computed 1-bit probability q, both B = 6 and B = 7 match 15 out of 16 tables — **missing just 4 entries in the single table for phase 19/32**. At that phase (ω = 4), look at the four trailing slots:
+Once B = 6 is fixed, a subtle numerical trap waits in p₀, the probability that a column left of the window remains 0. If you lazily compute `1.0 - q` from the already-computed 1-bit probability q, both B = 6 and B = 7 match 15 out of 16 tables, **missing just 4 entries in the single table for phase 19/32**. At that phase (ω = 4), look at the four trailing slots:
 
 | Canonical Index `canon` | Physical Column (1-based) | Surprising Probability | Rank |
 | :---------------------- | :------------------------ | :--------------------- | :--- |
@@ -225,9 +225,9 @@ Once B = 6 is fixed, a subtle numerical trap waits in p₀, the probability that
 
 Physical column 1 has surprising probability p₀ = exp(-λ / 2) ≈ 2.22 × 10⁻¹⁷, strictly larger than column 62's 1.66 × 10⁻¹⁷. Sorted by descending probability, the trailing canonical sequence must be 48, 52, 49, 50, 51, putting `[53, 54, 55, 52]` at slice `encode_perm[49..=52]`. Computing `1.0 - q` instead pushes slot 52 to last place, yielding `[52, 53, 54, 55]`.
 
-The root cause is floating-point cancellation. Although 2.22 × 10⁻¹⁷ is easily representable in IEEE-754 `f64` (nowhere near underflow), q = 1 - p₀ lands right below 1.0, where adjacent doubles are spaced by 2⁻⁵³. Under round-to-nearest-even, whenever p₀ ≤ 2⁻⁵⁴ ≈ 5.55 × 10⁻¹⁷, q rounds up to 1.0, turning `1.0 - q` into 0.0 — wiping out p₀ completely before subtraction even happens.
+The root cause is floating-point cancellation. Although 2.22 × 10⁻¹⁷ is easily representable in IEEE-754 `f64` (nowhere near underflow), q = 1 - p₀ lands right below 1.0, where adjacent doubles are spaced by 2⁻⁵³. Under round-to-nearest-even, whenever p₀ ≤ 2⁻⁵⁴ ≈ 5.55 × 10⁻¹⁷, q rounds up to 1.0, turning `1.0 - q` into 0.0 and wiping out p₀ completely before subtraction even happens.
 
-Evaluating the exponential directly (such as `(-lambda / 2^j).exp()` in Rust) avoids catastrophic cancellation and reproduces all 16 permutation tables bit-for-bit at B = 6. This single comparison simultaneously rules out B = 7 and `1.0 - q` — though strictly speaking, it only proves Kevin's generator did not use `1.0 - q`, not the exact syntax he wrote.
+Evaluating the exponential directly (such as `(-lambda / 2^j).exp()` in Rust) avoids catastrophic cancellation and reproduces all 16 permutation tables bit-for-bit at B = 6. This single comparison simultaneously rules out B = 7 and `1.0 - q`, though strictly speaking, it only proves Kevin's generator did not use `1.0 - q`, not the exact syntax he wrote.
 
 ## Degree-19 Polynomials and the Exponential Constant
 
@@ -244,7 +244,7 @@ Factoring out (1 + (C / K)³ / `66.774757`) keeps the polynomial's target ratio 
 
 If runtime switches branches at 5.6K or 5.7K, what domain were the 23 polynomials originally fitted over? Evaluating the checked-in polynomials past the runtime cutoff reveals a clear pattern:
 
-- Every row holds relative error within 5 × 10⁻⁷ all the way out to C = 6K, then diverges rapidly just past 6K — by 6.25K, errors jump to 4 × 10⁻⁶–1.3 × 10⁻⁴ across the board.
+- Every row holds relative error within 5 × 10⁻⁷ all the way out to C = 6K, then diverges rapidly just past 6K; by 6.25K, errors jump to between 4 × 10⁻⁶ and 1.3 × 10⁻⁴ across the board.
 - For `lg_k` = 4 (K = 16), the cliff is razor-sharp: across C = 2..96, maximum relative error is 8.7 × 10⁻⁸ (at C = 95), dips to 1.3 × 10⁻⁸ at C = 96, and spikes two orders of magnitude to 2.2 × 10⁻⁶ at C = 97.
 - At larger K, however, a single integer step barely moves C / K, smoothing out any sharp break: at `lg_k` = 8, relative error at C = 6K + 1 is still -6.6 × 10⁻⁸, even slightly smaller than at C = 6K.
 
@@ -252,7 +252,7 @@ Our confidence that fitting stopped right at 6K therefore relies on the coeffici
 
 Attempting to reconstruct the coefficients exposes a sharp **identifiability boundary** between small and large sketches:
 
-- For `lg_k` ≤ 7 (6K ≤ 768 integer points), unweighted least squares on **every integer point from C = 1 to 6K** recovers all 20 coefficients within 0.07% to 1.4% of upstream values. Dropping C = 1 or shifting either endpoint by 1 degrades coefficient agreement by 4× to 59×. While that strongly supports an all-integer [1, 6K] grid, it still leaves details unpinned — relative-error weighting actually fits slightly closer at `lg_k` = 4, and the original solver details are lost.
+- For `lg_k` ≤ 7 (6K ≤ 768 integer points), unweighted least squares on **every integer point from C = 1 to 6K** recovers all 20 coefficients within 0.07% to 1.4% of upstream values. Dropping C = 1 or shifting either endpoint by 1 degrades coefficient agreement by 4× to 59×. While that strongly supports an all-integer [1, 6K] grid, it still leaves details unpinned: relative-error weighting actually fits slightly closer at `lg_k` = 4, and the original solver details are lost.
 - For `lg_k` ≥ 8, both all-integer grids and boundary-weighted grids yield coefficients 14% to 65% off from upstream, even while predicted values track the reference curve within 3e-7 in-range and within max(2.5e-6, 1 / (80 * K)) past the splice point. Recovering high-degree monomial coefficients from samples is severely ill-conditioned: the unscaled degree-19 Vandermonde matrix on [1, 6K] has an L₂ condition number around 10¹⁷ (1.19 × 10¹⁷ at `lg_k` = 4), still hovering around 10¹⁴ after column normalization. Two coefficient vectors far apart in Euclidean space can produce virtually identical curves.
 
 ### Three Constants Behind the Exponential Branch
@@ -269,7 +269,7 @@ That 2.36 × 10⁻¹³ gap between D and the runtime constant has a remarkably c
 
 ![Exponential constant derived from zero period-mean relative error](./eq-icon-constant.png "w=780")
 
-Replacing ⟨exp((ln 2) · P(t))⟩ with the second-order expansion of the modified Bessel function I₀(a) omits only ~5 × 10⁻²⁶ — far below double precision. Rounded to `f64`, **this closed form matches `0.7940236163830469` bit-for-bit**. Our unit test queries the production constant directly at runtime and verifies an exact match (and agrees within 2 ULPs against numerical harmonic integration over a full cycle). Still, the epistemological caveat holds: showing that an optimality criterion reproduces a constant bit-for-bit does not prove Kevin wrote that exact criterion.
+Replacing ⟨exp((ln 2) · P(t))⟩ with the second-order expansion of the modified Bessel function I₀(a) omits only ~5 × 10⁻²⁶, far below double precision. Rounded to `f64`, **this closed form matches `0.7940236163830469` bit-for-bit**. Our unit test queries the production constant directly at runtime and verifies an exact match (and agrees within 2 ULPs against numerical harmonic integration over a full cycle). Still, the epistemological caveat holds: showing that an optimality criterion reproduces a constant bit-for-bit does not prove Kevin wrote that exact criterion.
 
 ## A Million Monte Carlo Trials and the Discrete Staircase Effect
 
@@ -277,9 +277,9 @@ The remaining pieces are the four confidence-bound tables: `ICON_{LOW,HIGH}_SIDE
 
 Stochastic tables cannot be reconstructed bit-for-bit like Huffman codes; they have to be checked statistically against independent simulations. Two practical hurdles arise immediately: how to run 10⁶ trials across `lg_k` = 4..=14 on a single machine, and why today's numbers match Kevin's original integers as closely as they do.
 
-Simulating individual insertions naively at `lg_k` = 14 (K = 16384) takes 1.6 × 10⁷ steps per trial — 1.6 × 10¹³ iterations for 10⁶ trials, completely impractical locally. Our fast simulator builds on the exponential-skip coupon process Kevin sketched in Appendix B of his paper: maintain just 64 empty-cell counters m<sub>j</sub>, the running HIP accumulator, and processed element count. Note one essential catch: **HIP values cannot be reconstructed from final column counts alone**, because HIP is strictly path-dependent on discovery order. As a minimal counterexample at K = 16, hitting column 1 and then column 2 yields 2.0323, whereas hitting column 2 and then column 1 yields 2.0159 — even though the final column counts are identical. At each step, total new-cell probability is p<sub>hit</sub> = ∑ m<sub>j</sub> / (K · 2<sup>j</sup>), so waiting steps between hits follow an exact geometric distribution sampled via a single logarithm; on each hit, add 1 / p<sub>hit</sub> to HIP and sample column j proportionally to m<sub>j</sub> · 2<sup>-j</sup>.
+Simulating individual insertions naively at `lg_k` = 14 (K = 16384) takes 1.6 × 10⁷ steps per trial (1.6 × 10¹³ iterations across 10⁶ trials), which is impractical on a single machine. Our fast simulator builds on the exponential-skip coupon process Kevin sketched in Appendix B of his paper: maintain just 64 empty-cell counters m<sub>j</sub>, the running HIP accumulator, and processed element count. Note one essential catch: **HIP values cannot be reconstructed from final column counts alone**, because HIP is strictly path-dependent on discovery order. As a minimal counterexample at K = 16, hitting column 1 and then column 2 yields 2.0323, whereas hitting column 2 and then column 1 yields 2.0159, even though the final column counts are identical. At each step, total new-cell probability is p<sub>hit</sub> = ∑ m<sub>j</sub> / (K · 2<sup>j</sup>), so waiting steps between hits follow an exact geometric distribution sampled via a single logarithm; on each hit, add 1 / p<sub>hit</sub> to HIP and sample column j proportionally to m<sub>j</sub> · 2<sup>-j</sup>.
 
-One subtle implementation boundary also belongs on the record: the fast simulator assigns explicit weight 2⁻⁶⁴ to physical column 64 (index 63) with initial `kxp` = K absorbing the remaining tail mass, whereas `sketch.rs` folds all hashes with ≥ 63 leading zeros into column 64 (actual hit probability 2⁻⁶³) while still deducting 2⁻⁶⁴ from `kxp` and calling `refresh_kxp` every 8 shifts to limit floating-point drift. Ideal and sketch processes therefore match strictly only as long as column 64 goes unhit and `refresh_kxp` drift stays negligible. Across over 4 × 10¹³ simulated insertions in our runs, expected column-64 hits total roughly 4.5 × 10⁻⁶, making it irrelevant in practice. Skipping empty draws reduces per-trial cost from O(N) to O(C) — roughly 10K coupons at N = 1000K — cutting runtime by two orders of magnitude so all 11 rows (10⁶ trials each in `simA`) finished in ~11 minutes across 14 threads.
+One subtle implementation boundary also belongs on the record: the fast simulator assigns explicit weight 2⁻⁶⁴ to physical column 64 (index 63) with initial `kxp` = K absorbing the remaining tail mass, whereas `sketch.rs` folds all hashes with ≥ 63 leading zeros into column 64 (actual hit probability 2⁻⁶³) while still deducting 2⁻⁶⁴ from `kxp` and calling `refresh_kxp` every 8 shifts to limit floating-point drift. Ideal and sketch processes therefore match strictly only as long as column 64 goes unhit and `refresh_kxp` drift stays negligible. Across over 4 × 10¹³ simulated insertions in our runs, expected column-64 hits total roughly 4.5 × 10⁻⁶, making it irrelevant in practice. Skipping empty draws reduces per-trial cost from O(N) to O(C) (roughly 10K coupons at N = 1000K), cutting runtime by two orders of magnitude so all 11 rows (10⁶ trials each in `simA`) finished in ~11 minutes across 14 threads.
 
 We also had to avoid a statistical pitfall. Because all six quantiles in a row (-3σ to +3σ) come from the same 10⁶ trials, they are correlated; simply summing squared per-cell z-scores against a χ² distribution is invalid. We saved full raw trial vectors C and HIP / N to disk across three runs:
 
@@ -287,17 +287,17 @@ We also had to avoid a statistical pitfall. Because all six quantiles in a row (
 2. Real CpcSketch control: 10⁶ trials per row with MurmurHash3 across `lg_k` = 4..=7, with independent stream seeds per `lg_k`
 3. `simB`: a second independent seed of the fast simulator across `lg_k` = 4..=12 (9 rows)
 
-We estimated each row's 6 × 6 quantile covariance matrix in two independent ways — **2,000 nonparametric Bootstrap resamples** and **Siddiqui's order-statistic asymptotic variance formula** — and formed joint Mahalanobis T² statistics across independent rows.
+We estimated each row's 6 × 6 quantile covariance matrix in two independent ways, using **2,000 nonparametric Bootstrap resamples** and **Siddiqui's order-statistic asymptotic variance formula**, and formed joint Mahalanobis T² statistics across independent rows.
 
 Both sanity-check controls held cleanly and agreed closely between both covariance estimators:
 
-- **Same-simulator null control**: Comparing `simA` vs. `simB` across all 54 shared degrees of freedom (`lg_k` = 4..=12) yields T² = 62.58 (p = 0.198) under Bootstrap covariance and T² = 63.77 (p = 0.171) analytically — textbook agreement between two independent 10⁶-trial batches.
-- **Real CpcSketch control**: Comparing real sketches against `simA` over 24 DoF (`lg_k` = 4..=7) yields T² = 36.72 (p = 0.047) Bootstrap and T² = 36.20 (p = 0.052) analytic; comparing against the average of `simA` and `simB` gives T² = 34.65 (p = 0.074) and T² = 33.96 (p = 0.085). Zero of the 24 cells exceeded 3σ, and only one exceeded 2σ — no sign of systematic bias.
+- **Same-simulator null control**: Comparing `simA` vs. `simB` across all 54 shared degrees of freedom (`lg_k` = 4..=12) yields T² = 62.58 (p = 0.198) under Bootstrap covariance and T² = 63.77 (p = 0.171) analytically, showing textbook agreement between two independent 10⁶-trial batches.
+- **Real CpcSketch control**: Comparing real sketches against `simA` over 24 DoF (`lg_k` = 4..=7) yields T² = 36.72 (p = 0.047) Bootstrap and T² = 36.20 (p = 0.052) analytic; comparing against the average of `simA` and `simB` gives T² = 34.65 (p = 0.074) and T² = 33.96 (p = 0.085). Zero of the 24 cells exceeded 3σ, and only one exceeded 2σ, showing no sign of systematic bias.
 
 Comparing against Kevin's checked-in tables revealed a clear divide between ICON and HIP:
 
 - **ICON tables**: Across all 66 cells, `simA` reproduces **59 of Kevin's integers verbatim**, with every underlying float sitting inside the ±0.5 rounding interval. In `simB`, 51 of 54 shared cells match verbatim, with 49 exact matches overlapping across Upstream, `simA`, and `simB`.
-- **HIP tables**: Under row independence, uniform 1/12 rounding variance, and upstream trial-count covariance, Upstream vs. `simA` over 66 DoF yields T² = 103.97 (p = 1.99 × 10⁻³; analytic T² = 102.27, p = 2.81 × 10⁻³); Upstream vs. `simB` over 54 DoF yields T² = 73.46 (p = 0.040; analytic T² = 73.04, p = 0.043); and Upstream vs. the average of `simA` and `simB` gives T² = 87.29 (p = 2.77 × 10⁻³; analytic T² = 86.36, p = 3.39 × 10⁻³). Most of the signal concentrates in `lg_k` = 7, 9, and 11: in `simA` their single-row p-values are 5.4 × 10⁻³, 0.014, and 9.5 × 10⁻⁴, yielding Holm-adjusted p-values across 11 rows of 0.010 (`lg_k` = 11), 0.054 (`lg_k` = 7), and 0.13 (`lg_k` = 9), whereas in independent `simB` their single-row p-values are 0.092, 0.066, and 0.167. So while a mild aggregate discrepancy exists, row-level evidence is too uneven to pin down those three rows conclusively. In absolute terms, the largest difference across all 66 cells is just 83.74 table units (at `lg_k` = 9, -3σ), changing error factor ε by at most **1.49%** and one-sided confidence width by roughly **1.61%** — practically minor, though we did not re-measure empirical coverage rates directly.
+- **HIP tables**: Under row independence, uniform 1/12 rounding variance, and upstream trial-count covariance, Upstream vs. `simA` over 66 DoF yields T² = 103.97 (p = 1.99 × 10⁻³; analytic T² = 102.27, p = 2.81 × 10⁻³); Upstream vs. `simB` over 54 DoF yields T² = 73.46 (p = 0.040; analytic T² = 73.04, p = 0.043); and Upstream vs. the average of `simA` and `simB` gives T² = 87.29 (p = 2.77 × 10⁻³; analytic T² = 86.36, p = 3.39 × 10⁻³). Most of the signal concentrates in `lg_k` = 7, 9, and 11: in `simA` their single-row p-values are 5.4 × 10⁻³, 0.014, and 9.5 × 10⁻⁴, yielding Holm-adjusted p-values across 11 rows of 0.010 (`lg_k` = 11), 0.054 (`lg_k` = 7), and 0.13 (`lg_k` = 9), whereas in independent `simB` their single-row p-values are 0.092, 0.066, and 0.167. So while a mild aggregate discrepancy exists, row-level evidence is too uneven to pin down those three rows conclusively. In absolute terms, the largest difference across all 66 cells is just 83.74 table units (at `lg_k` = 9, -3σ), changing error factor ε by at most **1.49%** and one-sided confidence width by roughly **1.61%**. That shift is minor in practice, though we did not re-measure empirical coverage rates directly.
 
 Why do nearly 90% of stochastic ICON quantile cells match Kevin's original integers down to the last digit? Because **ICON depends solely on the integer coupon count C**, confining estimates to discrete "stair steps". In a million-trial batch, as long as a target quantile does not straddle an integer-C transition and trigger sample interpolation — and inspecting all 66 target quantiles confirms none did — the sample quantile lands cleanly on a single integer C step. Each +1 step in C raises the scaled table entry by:
 
@@ -305,7 +305,7 @@ Why do nearly 90% of stochastic ICON quantile cells match Kevin's original integ
 Δ_atom(C) = (10⁴ · √K / κ) · (N_hat(C) / N) · (2^(1/K) - 1) ≈ (10⁴ · ln 2) / (√K · κ)
 ```
 
-At `lg_k` = 4, κ = 1, adjacent steps sit roughly 1,733 units apart. Step widths vary slightly with N̂(C) / N, yet whenever two independent Monte Carlo runs fall on the same integer C, their unrounded floats agree **to the last bit** and round to the same integer. Inverting the 7 mismatched cells shows that every upstream entry also sits within ±0.5 of an exact integer-C step — just 1 to 3 counts away (5 cells differ by 1 C, and one cell each by 2 C and 3 C). At `lg_k` = 7, +1σ, for example, our run hits C = 1329 (6806.33), while Kevin's 7458 rounds neighboring C = 1330 (7457.61). Streaming HIP, by contrast, spans a vastly denser set of values even at finite N, so independent runs never lock onto the same integers across years the way ICON does.
+At `lg_k` = 4, κ = 1, adjacent steps sit roughly 1,733 units apart. Step widths vary slightly with N̂(C) / N, yet whenever two independent Monte Carlo runs fall on the same integer C, their unrounded floats agree **to the last bit** and round to the same integer. Inverting the 7 mismatched cells shows that every upstream entry also sits within ±0.5 of an exact integer-C step, just 1 to 3 counts away (5 cells differ by 1 C, and one cell each by 2 C and 3 C). At `lg_k` = 7, +1σ, for example, our run hits C = 1329 (6806.33), while Kevin's 7458 rounds neighboring C = 1330 (7457.61). Streaming HIP, by contrast, spans a vastly denser set of values even at finite N, so independent runs never lock onto the same integers across years the way ICON does.
 
 To be clear, the million-trial Monte Carlo simulator and raw trial outputs were kept locally as an independent verification record rather than checked into the PR.
 
