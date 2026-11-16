@@ -24,7 +24,7 @@ As it turned out, the Apache DataSketches community was interested in an officia
 
 Anyone who has implemented streaming distinct counting knows how HLL works: elements are hashed into `K` buckets, and each bucket keeps only the maximum leading-zero count seen so far — typically 4 to 6 bits — while every other hit in that bucket goes unrecorded. Once HLL enters dense mode, every bucket maintains a fixed-width register.
 
-In his 2017 paper [Back to the Future: an Even More Nearly Optimal Cardinality Estimation Algorithm](https://arxiv.org/pdf/1708.06839), Yahoo! Research scientist Kevin J. Lang proposed going back to basics: instead of keeping only per-bucket maxima, retain the full `K × 64` bit matrix of the classic FM85 coupon collector's process. Whenever row `r` sees a hash with `c` leading zeros, set bit `(r, c)` to `1`. Keeping the full two-dimensional hit matrix lets CPC pair a streaming HIP estimator with a mergeable ICON estimator for higher statistical efficiency than HLL. On serialization, it adapts its layout to fill density: low cardinalities use a sparse `PairTable` of `(row, column)` pairs, while medium and high cardinalities combine a sliding 8-bit window, length-limited Huffman coding, and column permutations to pack the sketch near the information-theoretic entropy limit. According to the DataSketches documentation, serialized CPC shrinks storage by 30% to 40% compared with HLL at equal accuracy.
+In his 2017 paper [Back to the Future: an Even More Nearly Optimal Cardinality Estimation Algorithm](https://arxiv.org/abs/1708.06839), Yahoo! Research scientist Kevin J. Lang proposed going back to basics: instead of keeping only per-bucket maxima, retain the full `K × 64` bit matrix of the classic FM85 coupon collector's process. Whenever row `r` sees a hash with `c` leading zeros, set bit `(r, c)` to `1`. Keeping the full two-dimensional hit matrix lets CPC pair a streaming HIP estimator with a mergeable ICON estimator for higher statistical efficiency than HLL. On serialization, it adapts its layout to fill density: low cardinalities use a sparse `PairTable` of `(row, column)` pairs, while medium and high cardinalities combine a sliding 8-bit window, length-limited Huffman coding, and column permutations to pack the sketch near the information-theoretic entropy limit. According to the DataSketches documentation, serialized CPC shrinks storage by 30% to 40% compared with HLL at equal accuracy.
 
 In late January, I ported `CpcSketch` to `datasketches-rust` ([PR-75](https://github.com/apache/datasketches-rust/pull/75)) and switched ScopeDB over to it. It has run smoothly in production for more than six months.
 
@@ -106,7 +106,14 @@ I searched every Apache DataSketches repository and came up empty on those `.ml`
 
 Kevin passed away in April 2019, and any code left on his personal machine is effectively lost to history.
 
-It was sobering news. Kevin's work in sketching algorithms runs through much of Apache DataSketches. Still, with the runtime decoders and detailed header comments sitting right there in the source files, it seemed possible to reverse-engineer the offline generators from the artifacts alone. I asked Lee whether the paper explained how the tables were derived, and he answered:
+I was saddened to hear that. Kevin's research in sketching algorithms underpins many of the core sketches in Apache DataSketches:
+
+- [A Framework for Estimating Stream Expression Cardinalities](https://arxiv.org/abs/1510.01455) (Theta Sketch)
+- [Optimal Quantile Approximation in Streams](https://arxiv.org/abs/1603.05346) (KLL Sketch — the "L" in KLL)
+- [A High-Performance Algorithm for Identifying Frequent Items in Data Streams](https://arxiv.org/abs/1705.07001) (Frequent Items Sketch)
+- [Back to the Future: an Even More Nearly Optimal Cardinality Estimation Algorithm](https://arxiv.org/abs/1708.06839) (CPC Sketch and HLL estimators)
+
+Still, with the runtime decoders and detailed header comments sitting right there in the source files, it seemed possible to reverse-engineer the offline generators from the artifacts alone. I asked Lee whether the CPC paper explained how the tables were derived, and he answered:
 
 > You should definitely read the paper. But it won't tell you any details on the Huffman codings. As I recall, in his paper he used a more standard compression scheme. He finished his work on the code after he had finished his paper -- and in the process came up with the modified Huffman coding idea, which is quite a bit more efficient than what he discussed in the paper.
 
