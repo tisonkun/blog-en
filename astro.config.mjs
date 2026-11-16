@@ -9,6 +9,8 @@ import expressiveCode from "astro-expressive-code";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { h } from "hastscript";
 import remarkToc from "remark-toc";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
 import { rehypeFigure } from "./src/plugins/rehype-figure.mjs";
@@ -41,8 +43,8 @@ export default defineConfig({
                     title: "Info"
                 }
             }
-        }], [remarkToc, { tight: true, ordered: false }]],
-        rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeAutolinkHeadings, {
+        }], remarkMath, [remarkToc, { tight: true, ordered: false }]],
+        rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeKatex, { strict: "error" }], [rehypeAutolinkHeadings, {
             behavior: 'append',
             content(_node) {
                 return [h('i.fa-solid.fa-link.header-link')]
