@@ -57,6 +57,10 @@ export default defineConfig({
         expressiveCode({
             themes: ['github-light'],
             plugins: [pluginLineNumbers()],
+            frames: {
+                extractFileNameFromCode: false,
+                removeCommentsWhenCopyingTerminalFrames: false,
+            },
             defaultProps: {
                 frame: 'terminal',
                 showLineNumbers: true,
