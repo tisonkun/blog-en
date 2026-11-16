@@ -18,22 +18,22 @@ I help open-source projects grow and join the [Apache Incubator](https://incubat
 
 Projects I mentor or have mentored:
 
-| Project                                                       | Mentoring since | Status                                                                     |
-| ------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
-| [Apache Answer](https://answer.apache.org)                    | 2023-10         | Graduated 2024-12                                                          |
-| [Apache Asyncband](https://github.com/apache/asyncband)       | 2026-08         | Incubating                                                                 |
-| [Apache Casbin](https://github.com/apache/casbin)             | 2026-02         | Incubating                                                                 |
-| [Apache Fesod](https://github.com/apache/fesod)               | 2025-09         | Incubating                                                                 |
-| [Apache Fluss](https://github.com/apache/fluss)               | 2025-06         | Graduated 2026-07                                                          |
-| [Apache Fory](https://github.com/apache/fory)                 | 2023-12         | Graduated 2025-07                                                          |
-| [Apache GraphAr](https://github.com/apache/incubator-graphar) | 2024-03         | Incubating                                                                 |
-| [Apache Iggy](https://github.com/apache/iggy)                 | 2025-02         | Graduated 2026-08                                                          |
-| [Apache Kvrocks](https://github.com/apache/kvrocks)           | 2022-04         | [Graduated 2023-06](https://www.tisonkun.org/2023/06/28/kvrocks-graduate/) |
-| [Apache Maka](https://github.com/apache/maka)                 | 2026-08         | Incubating                                                                 |
-| [Apache OpenDAL](https://github.com/apache/opendal)           | 2023-02         | [Graduated 2024-01](https://tisonkun.io/posts/apache-opendal-graduation)   |
-| [Apache Ossie](https://github.com/apache/ossie)               | 2026-06         | Incubating                                                                 |
-| [Apache StreamPark](https://streampark.apache.org)            | 2022-09         | Graduated 2025-01                                                          |
-| [Apache Teaclave](https://teaclave.apache.org/)               | 2019-08         | [Graduated 2025-08](https://www.tisonkun.org/2025/08/22/teaclave/)         |
+| Project                                                       | Mentoring since | Status                                                |
+| ------------------------------------------------------------- | --------------- | ----------------------------------------------------- |
+| [Apache Answer](https://answer.apache.org)                    | 2023-10         | Graduated 2024-12                                     |
+| [Apache Asyncband](https://github.com/apache/asyncband)       | 2026-08         | Incubating                                            |
+| [Apache Casbin](https://github.com/apache/casbin)             | 2026-02         | Incubating                                            |
+| [Apache Fesod](https://github.com/apache/fesod)               | 2025-09         | Incubating                                            |
+| [Apache Fluss](https://github.com/apache/fluss)               | 2025-06         | Graduated 2026-07                                     |
+| [Apache Fory](https://github.com/apache/fory)                 | 2023-12         | Graduated 2025-07                                     |
+| [Apache GraphAr](https://github.com/apache/incubator-graphar) | 2024-03         | Incubating                                            |
+| [Apache Iggy](https://github.com/apache/iggy)                 | 2025-02         | Graduated 2026-08                                     |
+| [Apache Kvrocks](https://github.com/apache/kvrocks)           | 2022-04         | Graduated 2023-06                                     |
+| [Apache Maka](https://github.com/apache/maka)                 | 2026-08         | Incubating                                            |
+| [Apache OpenDAL](https://github.com/apache/opendal)           | 2023-02         | [Graduated 2024-01](/posts/apache-opendal-graduation) |
+| [Apache Ossie](https://github.com/apache/ossie)               | 2026-06         | Incubating                                            |
+| [Apache StreamPark](https://streampark.apache.org)            | 2022-09         | Graduated 2025-01                                     |
+| [Apache Teaclave](https://teaclave.apache.org/)               | 2019-08         | Graduated 2025-08                                     |
 
 ## Open-source contributions
 
