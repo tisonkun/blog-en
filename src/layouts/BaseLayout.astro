@@ -2,6 +2,7 @@
 import "@/styles/global.css";
 import Footer from "@/components/Footer.astro";
 import Header from "@/components/Header.astro";
+import ImageZoom from "@/components/ImageZoom.astro";
 import HeaderMeta from "./HeaderMeta.astro";
 import "@fontsource-variable/open-sans";
 
@@ -31,5 +32,6 @@ const title = origTitle;
             <slot />
         </main>
         <Footer />
+        <ImageZoom />
     </body>
 </html>

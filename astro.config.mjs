@@ -12,6 +12,7 @@ import remarkToc from "remark-toc";
 import rehypeToc from "rehype-toc";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
+import { rehypeFigure } from "./src/plugins/rehype-figure.mjs";
 
 const port = 4000;
 const isBuild = process.env.npm_lifecycle_script?.includes("astro build");
@@ -42,7 +43,7 @@ export default defineConfig({
                 }
             }
         }], [remarkToc, { tight: true, ordered: false }]],
-        rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, {
+        rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeAutolinkHeadings, {
             behavior: 'append',
             content(_node) {
                 return [h('i.fa-solid.fa-link.header-link')]

@@ -22,7 +22,7 @@ While evaluating alternatives, I came across Apache DataSketches, which offered 
 
 As it turned out, the Apache DataSketches community was interested in an official Rust port. Starting late last year, I teamed up with a few other Rust developers well-versed in sketching algorithms to build and ship the initial releases of datasketches-rust, beginning with HllSketch. Soon after, I switched ScopeDB's distinct counting over to our datasketches-rust implementation.
 
-![Apache DataSketches Rust Contributors](./datasketches-contributors.png)
+![Apache DataSketches Rust Contributors](./datasketches-contributors.png "w=480")
 
 Anyone who has implemented streaming distinct counting knows how HLL works: elements are hashed into K buckets, and each bucket keeps only the maximum leading-zero count seen so far — typically 4 to 6 bits — while every other hit in that bucket goes unrecorded. Once HLL enters dense mode, every bucket maintains a fixed-width register.
 
@@ -30,7 +30,7 @@ In his 2017 paper [Back to the Future: an Even More Nearly Optimal Cardinality E
 
 In late January, I ported CpcSketch to datasketches-rust ([PR-75](https://github.com/apache/datasketches-rust/pull/75)) and switched ScopeDB over to it. It has run smoothly in production for more than six months.
 
-![https://github.com/apache/datasketches-rust/pull/75](./cpc-sketch-pr-75.png)
+![https://github.com/apache/datasketches-rust/pull/75](./cpc-sketch-pr-75.png "w=760")
 
 While porting CpcSketch from the upstream C++ and Java implementations, however, I noticed several hardcoded magic lookup tables in the source code:
 
@@ -133,7 +133,7 @@ What followed became a multi-round relay across three models:
 
 Of course, the real process took several back-and-forth passes as the models challenged and cross-checked one another. The result was [PR-355](https://github.com/apache/datasketches-rust/pull/355), which captures the reconstructed generators and derivations as unit tests in datasketches-rust — the same approach we took for `kxp_byte_lookup`.
 
-![https://github.com/apache/datasketches-rust/pull/355](./cpc-sketch-pr-355.png)
+![https://github.com/apache/datasketches-rust/pull/355](./cpc-sketch-pr-355.png "w=720")
 
 Here is the full write-up once the dust settled, walking table by table through the mathematical structure along with the most instructive wrong turns along the way. To keep the narrative readable, formal derivations sit in the appendix at the end. Since LLM agents assisted with these derivations, feel free to leave a comment or open a PR on datasketches-rust if you spot any error.
 
@@ -236,7 +236,7 @@ Next comes the **ICON cardinality estimator** in [`estimator.rs`](https://github
 - For C ≤ 5.7K (tightened to 5.6K for `lg_k` ≥ 14), evaluate a **degree-19 polynomial** preconditioned with a cubic leading factor
 - Beyond that splice point, switch to an asymptotic exponential formula
 
-![Piecewise approximation formulas in the ICON estimator](./eq-icon-estimator.png)
+![Piecewise approximation formulas in the ICON estimator](./eq-icon-estimator.png "w=780")
 
 Factoring out (1 + (C / K)³ / `66.774757`) keeps the polynomial's target ratio within [0.89, 1.48], instead of letting N / C expand more than 8× over [0, 6]. Scaling the variable as x = C / (2K) maps [0, 6K] onto [0, 3], keeping x¹⁹ at 3¹⁹ ≈ 1.16 × 10⁹ rather than 6¹⁹ ≈ 6.09 × 10¹⁴.
 
@@ -267,7 +267,7 @@ The exponential constant and upstream test bounds used to look like pure empiric
 
 That 2.36 × 10⁻¹³ gap between D and the runtime constant has a remarkably crisp mathematical explanation down to the last bit. Suppose A was chosen so that A · K · 2^(C/K) has **zero mean relative error over one period** relative to the exact Poisson inverse. By the appendix derivation on period-mean relative error, A must satisfy:
 
-![Exponential constant derived from zero period-mean relative error](./eq-icon-constant.png)
+![Exponential constant derived from zero period-mean relative error](./eq-icon-constant.png "w=780")
 
 Replacing ⟨exp((ln 2) · P(t))⟩ with the second-order expansion of the modified Bessel function I₀(a) omits only ~5 × 10⁻²⁶ — far below double precision. Rounded to `f64`, **this closed form matches `0.7940236163830469` bit-for-bit**. Our unit test queries the production constant directly at runtime and verifies an exact match (and agrees within 2 ULPs against numerical harmonic integration over a full cycle). Still, the epistemological caveat holds: showing that an optimality criterion reproduces a constant bit-for-bit does not prove Kevin wrote that exact criterion.
 
@@ -342,7 +342,7 @@ Comparing this with the Poisson limit ln(1 - q<sub>poi</sub>) = -λ / 2<sup>j</s
 
 Taking the Mellin transform f*(s) = ∫₀<sup>∞</sup> f(λ) · λ<sup>s-1</sup> dλ of the infinite-column expectation sum f(λ) = ∑<sub>j≥1</sub> (1 - exp(-λ / 2<sup>j</sup>)) in the fundamental strip -1 < Re(s) < 0 using ∫₀<sup>∞</sup> (1 - exp(-x)) · x<sup>s-1</sup> dx = -Γ(s) (sanity-checking the sign at s = -1/2: a positive integrand matches -Γ(-1/2) = 2√π > 0) yields the transform and oscillatory Fourier series:
 
-![Mellin transform and periodic ripple derivation](./eq-mellin-ripple.png)
+![Mellin transform and periodic ripple derivation](./eq-mellin-ripple.png "w=780")
 
 Shifting the inversion contour rightward past all poles along Re(s) = 0 produces the large-λ asymptotic expansion f(λ) = log₂ λ + γ / ln 2 - 1/2 + P(log₂ λ) + R(λ), where R(λ) = ∑ exp(-2<sup>r</sup> · λ) < 2 × 10⁻¹⁷ on the exponential branch (λ ≥ 38.5):
 
@@ -367,7 +367,7 @@ At fixed C / K, finite K requires a slightly lower true density λ than the infi
 
 For λ ≫ 1, matrix cells are independent in the Poisson limit, so total coupon variance sums across columns as Var(C) ≈ K · ∑ exp(-λ / 2<sup>j</sup>) · (1 - exp(-λ / 2<sup>j</sup>)). Approximating the sum by a continuous integral over one dyadic decade yields a standard **Frullani integral**:
 
-![Asymptotic relative standard error derivations for ICON and HIP](./eq-rse-integrals.png)
+![Asymptotic relative standard error derivations for ICON and HIP](./eq-rse-integrals.png "w=780")
 
 - **ICON estimator**: Propagating sd(C) through the exponential branch N<sub>ICON</sub> ∝ 2<sup>C/K</sup> gives RSE(N<sub>ICON</sub>) ≈ (ln 2 / K) · sd(C) = ln 2 / √K, matching `ICON_ERROR_CONSTANT` = ln 2 in source code.
 - **HIP estimator**: At arrival density λ = n / K, a new item flips an empty cell with probability p ≈ 1 / (λ · ln 2). Integrating conditional step variance (1 / p - 1) from 0 to N yields RSE(N<sub>HIP</sub>) ≈ √((ln 2) / 2) / √K, whose constant evaluates to `0.5887050112577373` in source code.
