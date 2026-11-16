@@ -98,11 +98,11 @@
 }
 
 .post-content code {
-    @apply rounded bg-gray-300/75 px-2 py-px;
+    @apply font-mono text-[0.9em];
 }
 
 .post-content pre code {
-    @apply rounded bg-transparent px-0 font-normal whitespace-pre-wrap;
+    @apply text-base bg-transparent px-0 font-normal whitespace-pre-wrap;
 }
 
 .post-content ul {
