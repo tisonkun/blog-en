@@ -89,6 +89,10 @@
     @apply leading-relaxed;
 }
 
+.post-content .expressive-code {
+    @apply my-6;
+}
+
 .post-content .highlight {
     @apply mb-8 block leading-relaxed rounded font-mono;
 }

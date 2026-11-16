@@ -61,8 +61,22 @@ export default defineConfig({
     integrations: [
         sitemap(),
         expressiveCode({
-            themes: ['solarized-light'],
+            themes: ['github-light'],
             plugins: [pluginLineNumbers()],
+            defaultProps: {
+                frame: 'terminal',
+                showLineNumbers: true,
+                overridesByLang: {
+                    'sh,bash,zsh,shell,console,text,plaintext': {
+                        showLineNumbers: false,
+                    },
+                },
+            },
+            styleOverrides: {
+                frames: {
+                    frameBoxShadowCssValue: '0 1px 3px rgba(0, 0, 0, 0.06)',
+                },
+            },
         }),
         mdx(),
     ],
