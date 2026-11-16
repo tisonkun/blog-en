@@ -30,7 +30,7 @@ In late January, I ported `CpcSketch` to `datasketches-rust` ([PR-75](https://gi
 
 ![https://github.com/apache/datasketches-rust/pull/75](./cpc-sketch-pr-75.png)
 
-While porting `CpcSketch` from the upstream C++ and Java implementations, however, I kept running into hardcoded magic lookup tables:
+While porting `CpcSketch` from the upstream C++ and Java implementations, however, I noticed several hardcoded magic lookup tables in the source code:
 
 1. 23 static Huffman encoding tables
 2. 16 sliding-window column permutations
@@ -164,19 +164,19 @@ Shannon entropy `H = -∑ P(b) · log₂ P(b)` and average code length `∑ P(b)
 | `K = 2³⁴`               | `3.69 × 10⁻¹¹`                 | `3.63 × 10⁻¹¹`            |
 | `K → ∞` (Poisson limit) | `4.92 × 10⁻¹¹`                 | `4.84 × 10⁻¹¹`            |
 
-At `K = 2³²`, the residual plunges by four orders of magnitude straight into IEEE-754 double-precision rounding noise.
+At `K = 2³²`, the residual drops by four orders of magnitude, right down to IEEE-754 double-precision rounding noise.
 
 Look at the clean symmetry in that table: `K = 2³¹` produces the exact same error as `K → ∞`, while `K = 2³³` has half the error. That happens because, to first order, the finite-`K` departure from the Poisson limit scales linearly with `1 / K` (derived in the first appendix section). When the true parameter is `K₀ = 2³²`, both `2³¹` and `∞` sit one step of `1 / 2³²` away on the `1 / K` axis, whereas `2³³` sits half a step away. Fittingly, comments in the upstream ICON estimator also put the maximum number of table rows at `2³²` slots.
 
 ## Steady-State Tables: The "Left-Edge Truncation" Mirage
 
-Moving to the 16 steady-state tables — covering phases `phase = (2m + 1) / 32` at fill ratios `C / K = B + phase` — we walked straight into a convincing false lead.
+Moving to the 16 steady-state tables — covering phases `phase = (2m + 1) / 32` at fill ratios `C / K = B + phase` — we ran into a convincing false lead.
 
 The column permutation tables (covered next) establish that the steady-state integer baseline is `B = 6`. Yet plugging our newly recovered `K = 2³²` and `B = 6` into the 16 steady-state tables leaves a **`6.1 × 10⁻¹²`** entropy residual in the 12th decimal place.
 
 At first glance, "left-edge truncation" looks like the obvious explanation: around `C / K ≈ 6`, column 1 of the coupon matrix is not quite 100% saturated, and its probability of still being `0` is roughly `5.3 × 10⁻¹²` — right on the order of the residual. Sure enough, keeping `K = 2³²` fixed and pushing the working point out to `B = 32` (`C / K = 32 + phase`) drops the entropy error to `10⁻¹⁵`. Everything seemed to line up to the order of magnitude.
 
-Two controlled ablations quickly tore that hypothesis apart:
+Two controlled ablations quickly ruled that hypothesis out:
 
 1. Holding `B = 6` fixed while switching from the `K = 2³²` binomial model to the **`K → ∞` Poisson limit** drops the error across all 16 steady-state tables to `~10⁻¹⁴`, right down to double-precision rounding noise.
 2. Holding `K = 2³²` fixed while stepping `B = 6, 7, 8` gives maximum entropy errors of `6.1 × 10⁻¹²`, `3.1 × 10⁻¹²`, and `1.5 × 10⁻¹²` — **halving with every `+1` step in `B`**.
@@ -304,7 +304,7 @@ To be clear, the million-trial Monte Carlo simulator and raw trial outputs were 
 
 The reconstructed generators, closed-form constants, and hardened tests have been merged upstream in [`PR-355`](https://github.com/apache/datasketches-rust/pull/355).
 
-Writing those unit tests underscored an important engineering lesson: **never write tautological tests**. An earlier draft verified the asymptotic constant against a second hardcoded copy inside the test file, and checked confidence bounds only by testing whether they bracketed the point estimate. Simple mutation testing tore both checks apart: changing the production constant to a coarse `0.794024` or zeroing out all 132 confidence-table entries still passed every test. We hardened the merged tests in two ways: the constant test calls production code directly to compare the runtime constant against the closed form, and the confidence-table test asserts strict monotonicity of interval width with `kappa` while stating its verification limits explicitly in comments. Today, all 23 Huffman tables and 16 permutation tables have bit-exact constructive tests, whereas the Monte Carlo confidence tables clearly document that unit tests do not verify empirical cell values or true coverage.
+Writing those unit tests underscored an important engineering lesson: **never write tautological tests**. An earlier draft verified the asymptotic constant against a second hardcoded copy inside the test file, and checked confidence bounds only by testing whether they bracketed the point estimate. Simple mutation testing exposed both gaps immediately: changing the production constant to a coarse `0.794024` or zeroing out all 132 confidence-table entries still passed every test. We hardened the merged tests in two ways: the constant test calls production code directly to compare the runtime constant against the closed form, and the confidence-table test asserts strict monotonicity of interval width with `kappa` while stating its verification limits explicitly in comments. Today, all 23 Huffman tables and 16 permutation tables have bit-exact constructive tests, whereas the Monte Carlo confidence tables clearly document that unit tests do not verify empirical cell values or true coverage.
 
 When reverse-engineering legacy numerical code, the biggest trap is thinking, "all tests pass, so we recovered what the author wrote." **Proving a model reproduces the artifacts is not proving the author coded that model.** Throughout code comments and this report, we drew a bright line between parameters uniquely pinned by data and equivalence classes that observations cannot tell apart, leaving six open questions for the community:
 
