@@ -1,0 +1,200 @@
+<div
+    id="image-zoom-overlay"
+    class="image-zoom-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    aria-label="Enlarged image preview"
+    hidden
+>
+    <button
+        type="button"
+        id="image-zoom-close"
+        class="image-zoom-close"
+        aria-label="Close zoomed image"
+    >
+        &times;
+    </button>
+    <div class="image-zoom-stage">
+        <img id="image-zoom-target" alt="" />
+        <p id="image-zoom-caption" class="image-zoom-caption" hidden></p>
+    </div>
+</div>
+
+<style>
+    .image-zoom-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.82);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        opacity: 0;
+        transition: opacity 200ms ease;
+        cursor: zoom-out;
+    }
+
+    .image-zoom-overlay[hidden] {
+        display: none;
+    }
+
+    .image-zoom-overlay.is-open {
+        opacity: 1;
+    }
+
+    .image-zoom-close {
+        position: fixed;
+        top: 1rem;
+        right: 1.25rem;
+        z-index: 61;
+        width: 2.25rem;
+        height: 2.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.55);
+        color: #f8fafc;
+        font-size: 1.35rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 150ms ease, border-color 150ms ease;
+    }
+
+    .image-zoom-close:hover {
+        background: rgba(15, 23, 42, 0.85);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .image-zoom-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: min(94vw, 1400px);
+        transform: scale(0.96);
+        transition: transform 200ms ease;
+    }
+
+    .image-zoom-overlay.is-open .image-zoom-stage {
+        transform: scale(1);
+    }
+
+    #image-zoom-target {
+        max-width: min(94vw, 1400px);
+        max-height: 85vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 0.5rem;
+        background: #fff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+        cursor: zoom-out;
+    }
+
+    .image-zoom-caption {
+        margin: 0.75rem 0 0;
+        max-width: min(90vw, 48rem);
+        text-align: center;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        color: #e2e8f0;
+    }
+
+    .image-zoom-caption[hidden] {
+        display: none;
+    }
+</style>
+
+<script>
+    const overlay = document.getElementById("image-zoom-overlay") as HTMLDivElement | null;
+    const targetImg = document.getElementById("image-zoom-target") as HTMLImageElement | null;
+    const captionEl = document.getElementById("image-zoom-caption") as HTMLParagraphElement | null;
+
+    if (overlay && targetImg && captionEl) {
+        let closeTimer: number | undefined;
+        let lastFocused: HTMLElement | null = null;
+
+        const openZoom = (img: HTMLImageElement) => {
+            if (closeTimer !== undefined) {
+                window.clearTimeout(closeTimer);
+                closeTimer = undefined;
+            }
+            const src = img.currentSrc || img.src;
+            if (!src) return;
+
+            lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+            const figure = img.closest("figure.post-figure");
+            const figcaption = figure?.querySelector(".post-figcaption");
+            const captionText = (figcaption?.textContent || img.alt || "").trim();
+
+            targetImg.src = src;
+            targetImg.alt = img.alt || captionText;
+
+            if (captionText) {
+                captionEl.textContent = captionText;
+                captionEl.hidden = false;
+            } else {
+                captionEl.textContent = "";
+                captionEl.hidden = true;
+            }
+
+            overlay.hidden = false;
+            overlay.setAttribute("aria-hidden", "false");
+            window.requestAnimationFrame(() => {
+                overlay.classList.add("is-open");
+            });
+        };
+
+        const closeZoom = () => {
+            if (overlay.hidden) return;
+            overlay.classList.remove("is-open");
+            overlay.setAttribute("aria-hidden", "true");
+            closeTimer = window.setTimeout(() => {
+                overlay.hidden = true;
+                targetImg.removeAttribute("src");
+                closeTimer = undefined;
+            }, 200);
+            if (lastFocused) {
+                lastFocused.focus({ preventScroll: true });
+                lastFocused = null;
+            }
+        };
+
+        document.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const zoomImg = target.closest(
+                ".post-content img[data-zoomable], .post-content figure.post-figure img",
+            );
+            if (zoomImg instanceof HTMLImageElement) {
+                event.preventDefault();
+                openZoom(zoomImg);
+            }
+        });
+
+        overlay.addEventListener("click", () => {
+            closeZoom();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !overlay.hidden) {
+                closeZoom();
+            }
+        });
+
+        const blockScroll = (event: Event) => {
+            if (!overlay.hidden) {
+                event.preventDefault();
+            }
+        };
+
+        overlay.addEventListener("wheel", blockScroll, { passive: false });
+        overlay.addEventListener("touchmove", blockScroll, { passive: false });
+    }
+</script>

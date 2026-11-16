@@ -2,8 +2,10 @@
 import "@/styles/global.css";
 import Footer from "@/components/Footer.astro";
 import Header from "@/components/Header.astro";
+import ImageZoom from "@/components/ImageZoom.astro";
 import HeaderMeta from "./HeaderMeta.astro";
 import "@fontsource-variable/open-sans";
+import "katex/dist/katex.min.css";
 
 interface Props {
     title: string;
@@ -24,12 +26,13 @@ const title = origTitle;
         <slot name="meta" />
     </head>
     <body
-        class="flex flex-col min-h-screen max-w-4xl font-sans mx-4 lg:mx-auto xl:mx-auto leading-normal"
+        class="flex flex-col min-h-screen w-full max-w-[47rem] px-4 mx-auto font-sans leading-normal"
     >
         <Header />
         <main class="flex-1 text-gray-900">
             <slot />
         </main>
         <Footer />
+        <ImageZoom />
     </body>
 </html>

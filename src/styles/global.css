@@ -89,6 +89,10 @@
     @apply leading-relaxed;
 }
 
+.post-content .expressive-code {
+    @apply my-6;
+}
+
 .post-content .highlight {
     @apply mb-8 block leading-relaxed rounded font-mono;
 }
@@ -98,43 +102,94 @@
 }
 
 .post-content code {
-    @apply rounded bg-gray-300/75 px-2 py-px;
+    @apply font-mono text-[0.9em];
 }
 
 .post-content pre code {
-    @apply rounded bg-transparent px-0 font-normal whitespace-pre-wrap;
+    @apply text-base bg-transparent px-0 font-normal whitespace-pre-wrap;
 }
 
 .post-content ul {
-    @apply list-inside list-disc;
+    @apply my-5 list-outside list-disc pl-6;
 }
 
-.post-content ul li {
-    @apply relative pl-6;
-}
-
-.post-content ul li p {
-    @apply inline-block p-0 m-0;
+.post-content ul ul {
+    list-style-type: circle;
 }
 
 .post-content ol {
-    @apply list-inside list-decimal;
+    @apply my-5 list-outside list-decimal pl-6;
 }
 
-.post-content ol li {
-    @apply relative pl-6;
+.post-content :is(ul, ol) > li {
+    @apply my-2.5 pl-1 leading-relaxed;
 }
 
-.post-content ol li p {
-    @apply inline-block p-0 m-0;
+.post-content :is(ul, ol) > li > :is(ul, ol) {
+    @apply mt-2 mb-1 space-y-1.5;
+}
+
+.post-content :is(ul, ol) > li > p {
+    @apply my-2;
+}
+
+.post-content :is(ul, ol) > li > p:first-child {
+    @apply mt-0;
+}
+
+.post-content :is(ul, ol) > li > p:last-child {
+    @apply mb-0;
 }
 
 .post-content img {
     @apply block m-auto;
 }
 
+.post-content img[data-zoomable] {
+    cursor: zoom-in;
+}
+
+.post-figure {
+    @apply my-8 flex flex-col items-center;
+}
+
+.post-content figure.post-figure img {
+    display: block;
+    width: auto;
+    max-width: min(100%, var(--img-max-w, 100%));
+    max-height: var(--img-max-h, 34rem);
+    height: auto;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    cursor: zoom-in;
+    transition: box-shadow 0.2s ease;
+}
+
+.post-content figure.post-figure img:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.post-figcaption {
+    @apply mt-2.5 text-center text-[13.5px] leading-snug text-gray-500;
+}
+
+.post-figcaption-link {
+    @apply text-gray-500 hover:text-blue-600 hover:underline underline-offset-2;
+}
+
 .post-content p {
     @apply my-6;
+}
+
+.post-content .katex {
+    font-size: 1.08em;
+}
+
+.post-content .katex-display {
+    margin: 1.5rem 0;
+    padding: 0.4rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .pagination {
@@ -163,4 +218,27 @@ figcaption {
 
 .header-link {
     @apply float-right text-gray-500;
+}
+
+.post-content :is(h2, h3, h4) {
+    scroll-margin-top: 1.75rem;
+}
+
+.post-body-wrap {
+    position: relative;
+}
+
+.post-toc-rail {
+    display: none;
+}
+
+@media (min-width: 1320px) {
+    .post-toc-rail {
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(100% + 2.25rem);
+        width: clamp(200px, calc((100vw - 45rem) / 2 - 3.25rem), 256px);
+    }
 }

@@ -9,9 +9,11 @@ import expressiveCode from "astro-expressive-code";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { h } from "hastscript";
 import remarkToc from "remark-toc";
-import rehypeToc from "rehype-toc";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
+import { rehypeFigure } from "./src/plugins/rehype-figure.mjs";
 
 const port = 4000;
 const isBuild = process.env.npm_lifecycle_script?.includes("astro build");
@@ -41,17 +43,11 @@ export default defineConfig({
                     title: "Info"
                 }
             }
-        }], [remarkToc, { tight: true, ordered: false }]],
-        rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, {
+        }], remarkMath, [remarkToc, { tight: true, ordered: false }]],
+        rehypePlugins: [rehypeSlug, rehypeFigure, [rehypeKatex, { strict: "error" }], [rehypeAutolinkHeadings, {
             behavior: 'append',
             content(_node) {
                 return [h('i.fa-solid.fa-link.header-link')]
-            },
-        }], [rehypeToc, {
-            headings: ["h2"],
-            cssClasses: {
-                toc: "toc-post",
-                link: "toc-link",
             },
         }]],
     },
@@ -61,8 +57,26 @@ export default defineConfig({
     integrations: [
         sitemap(),
         expressiveCode({
-            themes: ['solarized-light'],
+            themes: ['github-light'],
             plugins: [pluginLineNumbers()],
+            frames: {
+                extractFileNameFromCode: false,
+                removeCommentsWhenCopyingTerminalFrames: false,
+            },
+            defaultProps: {
+                frame: 'terminal',
+                showLineNumbers: true,
+                overridesByLang: {
+                    'sh,bash,zsh,shell,console,text,plaintext': {
+                        showLineNumbers: false,
+                    },
+                },
+            },
+            styleOverrides: {
+                frames: {
+                    frameBoxShadowCssValue: '0 1px 3px rgba(0, 0, 0, 0.06)',
+                },
+            },
         }),
         mdx(),
     ],

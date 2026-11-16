@@ -1,0 +1,278 @@
+---
+interface HeadingItem {
+    depth: number;
+    slug: string;
+    text: string;
+}
+
+interface TocGroup {
+    item: HeadingItem;
+    children: HeadingItem[];
+}
+
+interface Props {
+    headings: HeadingItem[];
+}
+
+const { headings } = Astro.props;
+
+const groups: TocGroup[] = [];
+for (const h of headings) {
+    if (h.depth === 2) {
+        groups.push({ item: h, children: [] });
+    } else if (h.depth === 3) {
+        if (groups.length > 0) {
+            groups[groups.length - 1].children.push(h);
+        } else {
+            groups.push({ item: h, children: [] });
+        }
+    }
+}
+---
+
+{
+    groups.length > 0 && (
+        <aside class="post-toc-rail" aria-label="On this page">
+            <nav class="post-toc-sticky" data-toc-nav aria-label="On this page">
+                <div class="post-toc-header">
+                    <svg
+                        viewBox="0 0 16 16"
+                        width="13"
+                        height="13"
+                        aria-hidden="true"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                    >
+                        <path d="M2.5 4h11M2.5 8h7.5M2.5 12h9.5" />
+                    </svg>
+                    <span>On this page</span>
+                </div>
+                <ul class="post-toc-list">
+                    {groups.map((group) => (
+                        <li class="post-toc-group" data-toc-group={group.item.slug}>
+                            <a
+                                class="post-toc-link"
+                                href={`#${group.item.slug}`}
+                                data-toc-link={group.item.slug}
+                            >
+                                {group.item.text}
+                            </a>
+                            {group.children.length > 0 && (
+                                <ul class="post-toc-sublist">
+                                    {group.children.map((child) => (
+                                        <li class="post-toc-subitem">
+                                            <a
+                                                class="post-toc-sublink"
+                                                href={`#${child.slug}`}
+                                                data-toc-link={child.slug}
+                                                data-toc-parent={group.item.slug}
+                                            >
+                                                {child.text}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        </aside>
+    )
+}
+
+<style>
+    .post-toc-sticky {
+        position: sticky;
+        top: 2.5rem;
+        max-height: calc(100vh - 5rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-top: 0.15rem;
+        scrollbar-width: none;
+    }
+
+    .post-toc-sticky::-webkit-scrollbar {
+        display: none;
+    }
+
+    .post-toc-header {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0 0 0.65rem;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: #374151;
+    }
+
+    .post-toc-header svg {
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+
+    .post-toc-list,
+    .post-toc-sublist {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .post-toc-list {
+        border-left: 1px solid #e5e7eb;
+    }
+
+    .post-toc-group {
+        margin: 0;
+        padding: 0;
+    }
+
+    .post-toc-link {
+        display: block;
+        margin-left: -1px;
+        border-left: 1.5px solid transparent;
+        padding: 0.3rem 0 0.3rem 0.85rem;
+        font-size: 13px;
+        line-height: 1.42;
+        color: #6b7280;
+        text-decoration: none;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
+    }
+
+    .post-toc-link:hover {
+        color: #111827;
+    }
+
+    .post-toc-link.is-parent-active {
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .post-toc-link.is-active {
+        border-left-color: #111827;
+        color: #111827;
+        font-weight: 600;
+    }
+
+    .post-toc-sublist {
+        display: none;
+        margin: 0.1rem 0 0.25rem;
+    }
+
+    .post-toc-group.is-expanded .post-toc-sublist {
+        display: block;
+    }
+
+    .post-toc-sublink {
+        display: block;
+        margin-left: -1px;
+        border-left: 1.5px solid transparent;
+        padding: 0.22rem 0 0.22rem 1.5rem;
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: #6b7280;
+        text-decoration: none;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
+    }
+
+    .post-toc-sublink:hover {
+        color: #111827;
+    }
+
+    .post-toc-sublink.is-active {
+        border-left-color: #111827;
+        color: #111827;
+        font-weight: 500;
+    }
+</style>
+
+<script>
+    const contentHeadings = Array.from(
+        document.querySelectorAll<HTMLElement>(".post-content h2[id], .post-content h3[id]"),
+    );
+    const tocLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]"));
+    const tocGroups = Array.from(document.querySelectorAll<HTMLElement>("[data-toc-group]"));
+    const tocNav = document.querySelector<HTMLElement>("[data-toc-nav]");
+
+    if (contentHeadings.length > 0 && tocLinks.length > 0) {
+        let currentActiveId = "";
+        let spyScheduled = false;
+
+        const updateActiveHeading = () => {
+            spyScheduled = false;
+            let nextActiveId = "";
+
+            for (const heading of contentHeadings) {
+                if (heading.getBoundingClientRect().top <= 120) {
+                    nextActiveId = heading.id;
+                } else {
+                    break;
+                }
+            }
+
+            if (
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 24
+            ) {
+                nextActiveId = contentHeadings[contentHeadings.length - 1].id;
+            }
+
+            if (nextActiveId === currentActiveId) return;
+            currentActiveId = nextActiveId;
+
+            const activeLink = currentActiveId
+                ? tocLinks.find((link) => link.dataset.tocLink === currentActiveId)
+                : undefined;
+            const activeParentSlug = activeLink?.dataset.tocParent;
+            const activeGroupSlug = activeParentSlug || currentActiveId;
+
+            for (const link of tocLinks) {
+                const slug = link.dataset.tocLink;
+                link.classList.toggle("is-active", slug === currentActiveId);
+                link.classList.toggle(
+                    "is-parent-active",
+                    Boolean(activeParentSlug && slug === activeParentSlug),
+                );
+            }
+
+            for (const group of tocGroups) {
+                group.classList.toggle(
+                    "is-expanded",
+                    Boolean(activeGroupSlug && group.dataset.tocGroup === activeGroupSlug),
+                );
+            }
+
+            if (tocNav && activeLink) {
+                const navRect = tocNav.getBoundingClientRect();
+                const linkRect = activeLink.getBoundingClientRect();
+                if (linkRect.top < navRect.top + 8 || linkRect.bottom > navRect.bottom - 8) {
+                    const targetTop =
+                        linkRect.top -
+                        navRect.top +
+                        tocNav.scrollTop -
+                        tocNav.clientHeight / 2 +
+                        linkRect.height / 2;
+                    tocNav.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+                }
+            }
+        };
+
+        const scheduleSpy = () => {
+            if (!spyScheduled) {
+                spyScheduled = true;
+                window.requestAnimationFrame(updateActiveHeading);
+            }
+        };
+
+        window.addEventListener("scroll", scheduleSpy, { passive: true });
+        window.addEventListener("resize", scheduleSpy, { passive: true });
+        updateActiveHeading();
+    }
+</script>

@@ -4,6 +4,7 @@ import { render } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Giscus from "@/components/Giscus.astro";
 import PostMeta from "@/components/PostMeta.astro";
+import PostSidebar from "@/components/PostSidebar.astro";
 import { Site } from "@/config";
 import { getAllPosts } from "@/lib/post";
 
@@ -28,7 +29,7 @@ const category = entry.data.category;
 const tags = entry.data.tags;
 const frontmatter = entry.data;
 const ogImageAbsoluteUrl = `${Site.baseUrl}/images/og.png`;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 ---
 
 <BaseLayout title={title}>
@@ -40,15 +41,18 @@ const { Content } = await render(entry);
         ogImageAbsoluteUrl={ogImageAbsoluteUrl}
         slot="meta"
     />
-    <article class="container pt-8">
+    <article class="pt-8">
         <header class="pb-4 mb-8 border-b border-gray-900/10">
             <h1 class="my-2 text-black leading-tight">{entry.data.title}</h1>
         </header>
-        <div class="post-content">
-            <Content />
+        <div class="post-body-wrap">
+            <div class="post-content">
+                <Content />
+            </div>
+            <PostSidebar headings={headings} />
         </div>
-        <div class="flex flex-row">
-            <p class="basis-1/12">Category</p>
+        <div class="flex flex-row mt-8">
+            <p class="basis-1/12 min-w-[4.75rem] shrink-0">Category</p>
             <p class="grow">
                 <a
                     class="ml-2 inline-block border border-blue-600 px-2 rounded"
@@ -59,7 +63,7 @@ const { Content } = await render(entry);
             </p>
         </div>
         <div class="flex flex-row">
-            <p class="basis-1/12">Tags</p>
+            <p class="basis-1/12 min-w-[4.75rem] shrink-0">Tags</p>
             <p class="grow">
                 {
                     tags.map((tag) => (
