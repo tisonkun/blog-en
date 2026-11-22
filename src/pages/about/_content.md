@@ -23,7 +23,7 @@ Projects I mentor or have mentored:
 | [Apache Answer](https://answer.apache.org)                    | 2023-10         | Graduated 2024-12                                     |
 | [Apache Asyncband](https://github.com/apache/asyncband)       | 2026-08         | Incubating                                            |
 | [Apache Casbin](https://github.com/apache/casbin)             | 2026-02         | Incubating                                            |
-| [Apache Fesod](https://github.com/apache/fesod)               | 2025-09         | Incubating                                            |
+| [Apache Fesod](https://github.com/apache/fesod)               | 2025-09         | Graduated 2026-11                                     |
 | [Apache Fluss](https://github.com/apache/fluss)               | 2025-06         | Graduated 2026-07                                     |
 | [Apache Fory](https://github.com/apache/fory)                 | 2023-12         | Graduated 2025-07                                     |
 | [Apache GraphAr](https://github.com/apache/incubator-graphar) | 2024-03         | Incubating                                            |
