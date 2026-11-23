@@ -23,7 +23,7 @@
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/newsreader": "^5.3.0",
     "@microflash/remark-callout-directives": "^5.0.1",
-    "astro": "^7.4.12",
+    "astro": "^7.4.13",
     "astro-expressive-code": "^0.44.3",
     "hastscript": "^9.0.3",
     "katex": "^0.19.1",
