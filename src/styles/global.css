@@ -53,7 +53,14 @@
     }
 
     blockquote {
-        @apply border-l-2 text-gray-500 border-gray-500 px-4;
+        margin: 1.75rem 0;
+        padding: 1.1rem 1.35rem;
+        background-color: #f8f8f6;
+        border: 1px solid #e7e5e0;
+        border-radius: 10px;
+        color: #33333a;
+        font-size: 0.94rem;
+        line-height: 1.74;
     }
 
     hr {
@@ -179,6 +186,20 @@
 
 .post-content p {
     @apply my-6;
+}
+
+.post-content blockquote p {
+    margin: 0.75rem 0;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.post-content blockquote p:first-child {
+    margin-top: 0;
+}
+
+.post-content blockquote p:last-child {
+    margin-bottom: 0;
 }
 
 .post-content .katex {
