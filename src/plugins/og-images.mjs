@@ -9,16 +9,16 @@ const OG_HEIGHT = 630;
 const SITE_TITLE = "Da Capo";
 const SITE_DESCRIPTION = "Async. Distributed Systems. Open Source.";
 const SITE_DOMAIN = "tisonkun.io";
-const SITE_AUTHOR = "Zili Chen (@tison1096)";
+const SITE_AUTHOR = "tison";
 
 let cachedFonts = null;
 
 function loadFonts(rootDir) {
     if (cachedFonts) return cachedFonts;
-    const frauncesMedium = fs.readFileSync(
+    const newsreaderMedium = fs.readFileSync(
         path.join(
             rootDir,
-            "node_modules/@fontsource/fraunces/files/fraunces-latin-500-normal.woff"
+            "node_modules/@fontsource/newsreader/files/newsreader-latin-500-normal.woff"
         )
     );
     const jetbrainsRegular = fs.readFileSync(
@@ -34,7 +34,7 @@ function loadFonts(rootDir) {
         )
     );
     cachedFonts = [
-        { name: "Fraunces", data: frauncesMedium, weight: 500, style: "normal" },
+        { name: "Newsreader", data: newsreaderMedium, weight: 500, style: "normal" },
         { name: "JetBrains Mono", data: jetbrainsRegular, weight: 400, style: "normal" },
         { name: "JetBrains Mono", data: jetbrainsMedium, weight: 500, style: "normal" },
     ];
@@ -181,10 +181,11 @@ function buildSiteOgNode() {
                     type: "div",
                     props: {
                         style: {
-                            width: "100%",
+                            flex: 1,
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            gap: "26px",
                         },
                         children: [
                             {
@@ -193,65 +194,25 @@ function buildSiteOgNode() {
                                     style: {
                                         display: "flex",
                                         alignItems: "center",
-                                        gap: "20px",
+                                        gap: "28px",
                                     },
                                     children: [
-                                        repeatMarkNode(64),
+                                        repeatMarkNode(96),
                                         {
                                             type: "span",
                                             props: {
                                                 style: {
-                                                    fontFamily: "JetBrains Mono",
-                                                    fontSize: "24px",
+                                                    fontFamily: "Newsreader",
+                                                    fontSize: "108px",
                                                     fontWeight: 500,
-                                                    color: "#696974",
-                                                    letterSpacing: "0.04em",
-                                                    textTransform: "uppercase",
+                                                    lineHeight: 1.0,
+                                                    letterSpacing: "-0.025em",
+                                                    color: "#16161D",
                                                 },
-                                                children: SITE_DOMAIN,
+                                                children: SITE_TITLE,
                                             },
                                         },
                                     ],
-                                },
-                            },
-                            {
-                                type: "span",
-                                props: {
-                                    style: {
-                                        fontFamily: "JetBrains Mono",
-                                        fontSize: "22px",
-                                        fontWeight: 400,
-                                        color: "#696974",
-                                        letterSpacing: "0.08em",
-                                        textTransform: "uppercase",
-                                    },
-                                    children: "JOURNAL",
-                                },
-                            },
-                        ],
-                    },
-                },
-                {
-                    type: "div",
-                    props: {
-                        style: {
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "20px",
-                        },
-                        children: [
-                            {
-                                type: "div",
-                                props: {
-                                    style: {
-                                        fontFamily: "Fraunces",
-                                        fontSize: "102px",
-                                        fontWeight: 500,
-                                        lineHeight: 1.05,
-                                        letterSpacing: "-0.025em",
-                                        color: "#16161D",
-                                    },
-                                    children: SITE_TITLE,
                                 },
                             },
                             {
@@ -296,7 +257,7 @@ function buildSiteOgNode() {
 
 function buildPostOgNode(post) {
     const title = post.title.replaceAll("'", "’");
-    const titleSize = title.length > 62 ? 56 : title.length > 46 ? 64 : 72;
+    const titleSize = title.length > 62 ? 58 : title.length > 46 ? 66 : 74;
     const displayTags = post.tags.slice(0, 4);
 
     return {
@@ -338,8 +299,8 @@ function buildPostOgNode(post) {
                                             type: "span",
                                             props: {
                                                 style: {
-                                                    fontFamily: "Fraunces",
-                                                    fontSize: "34px",
+                                                    fontFamily: "Newsreader",
+                                                    fontSize: "36px",
                                                     fontWeight: 500,
                                                     letterSpacing: "-0.02em",
                                                     color: "#19191F",
@@ -370,11 +331,11 @@ function buildPostOgNode(post) {
                     type: "div",
                     props: {
                         style: {
-                            fontFamily: "Fraunces",
+                            fontFamily: "Newsreader",
                             fontSize: `${titleSize}px`,
                             fontWeight: 500,
                             lineHeight: 1.18,
-                            letterSpacing: "-0.025em",
+                            letterSpacing: "-0.02em",
                             color: "#16161D",
                             maxWidth: "980px",
                         },
