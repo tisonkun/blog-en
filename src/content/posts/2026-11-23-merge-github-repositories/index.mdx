@@ -7,7 +7,6 @@ description: >
 tags:
     - git
     - open-source
-    - tidb
 category: journal
 ---
 
@@ -99,10 +98,10 @@ git commit --amend -s
 git push
 ```
 
-That fixes the relative paths too. The rewritten Dumpling history eventually landed in `pingcap/tidb` via [PR #29001](https://github.com/pingcap/tidb/pull/29001).
+That fixes the relative paths too. The rewritten Dumpling history eventually landed in `pingcap/tidb` via [PR-29001](https://github.com/pingcap/tidb/pull/29001).
 
 ## The Simpler Way I Learned Right After
 
 That third workaround was undeniably clumsy, with commands barely fitting together, though it was the best I had at the time. People pointed out [git-filter-repo](https://github.com/newren/git-filter-repo) as the modern replacement, except it meant installing an extra tool and wading through unfamiliar docs, so I passed.
 
-Later, I chatted with [@xhebox](https://x.com/@xhebox), who drove the [`pingcap/parser` merge](https://github.com/pingcap/tidb/pull/28644). It turned out you didn't even need `git-subtree`: once you've rewritten the sub-repository's paths and commit messages in step one, you can push that branch straight into `tidb` and rebase it onto `master`. It feels like a bit of a brain teaser, and it eliminates both `git-subtree` and the awkward directory unwrap afterward.
+Later, I chatted with [@xhebox](https://github.com/xhebox), who drove the [`pingcap/parser` merge](https://github.com/pingcap/tidb/pull/28644). It turned out you didn't even need `git-subtree`: once you've rewritten the sub-repository's paths and commit messages in step one, you can push that branch straight into `tidb` and rebase it onto `master`. It feels like a bit of a brain teaser, and it eliminates both `git-subtree` and the awkward directory unwrap afterward.
