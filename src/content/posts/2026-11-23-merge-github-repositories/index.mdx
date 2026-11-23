@@ -1,0 +1,107 @@
+---
+slug: merge-github-repositories
+title: "Afterglow of the Artisanal Era: Merging Two Git Repos by Hand"
+date: 2026-11-23
+description: >
+    An October 2021 throwback from PingCAP: merging satellite repositories into pingcap/tidb by hand with git subtree, git rebase, git filter-branch, and Perl one-liners, back before LLMs turned this kind of craft into a relic.
+tags:
+    - git
+    - open-source
+category: journal
+---
+
+> This is an old note I wrote in October 2021 while working at PingCAP, documenting how I merged two GitHub repositories by hand. Now that artisanal coding feels like an intangible cultural heritage craft, a conversation yesterday about rewriting GitHub commit history brought it back to mind. Here is the original note, lightly edited.
+
+In late 2021, the TiDB community ran a wave of proposals to fold several satellite repositories back into a monorepo layout:
+
+- [Move `pingcap/parser` back to `pingcap/tidb`](https://github.com/pingcap/tidb/issues/28454)
+- [Merge `pingcap/br` into `pingcap/tidb`](https://github.com/pingcap/tidb/issues/26877)
+- [Merge `pingcap/dumpling` into `pingcap/tidb`](https://github.com/pingcap/tidb/issues/28775)
+- [Merge `pingcap/dm` into TiCDC (`pingcap/tiflow`)](https://github.com/pingcap/tiflow/issues/3194)
+
+Doing that cleanly took a pile of obscure Git tricks. I wrote them down to make life a bit easier, though I sincerely hope you never have to use any of them.
+
+## Why Not Submodules
+
+Suppose you want to merge a sub-repository (`pingcap/dumpling`) into a main repository (`pingcap/tidb`) while preserving the original commit history for browsing and `git blame`, rather than dumping all the files in as one giant commit.
+
+The common way to make one repository depend on another is [git-submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules), which keeps a pointer to the sub-repository inside the main one. C and C++ projects that vendor third-party dependencies lean on it heavily (ClickHouse is a classic example).
+
+Submodules still leave you with two separate repositories and two sets of `.git` metadata, though. For a real monorepo consolidation like TiDB's, the exact traits that make `git-submodule` useful become the problem.
+
+## Starting with `git-subtree`
+
+Instead, you can reach for a lesser-known command, [git-subtree](https://www.atlassian.com/git/tutorials/git-subtree):
+
+```bash
+git checkout -b merge-dumpling
+git subtree add --prefix=dumpling https://github.com/pingcap/dumpling.git master
+```
+
+And you're done. Mostly.
+
+Run that at the root of `tidb` and `pingcap/dumpling` shows up under `dumpling/`, bringing its commit history along with it. The branch is still three problems away from being cleanly mergeable, so let's work through them one by one.
+
+## 1. Keeping a Linear History
+
+`git-subtree` interleaves the imported commits in chronological order alongside the main repository's history. You can't land that on `master` while keeping a linear history unless you force-push to the default branch, which is dangerous and usually forbidden.
+
+We don't actually need strict chronological interleaving; keeping the diff commits themselves for blame is enough. Running [git-rebase](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) against `master` takes care of this:
+
+```bash
+git rebase master
+```
+
+## 2. Rewriting GitHub PR References
+
+Commits merged through GitHub Pull Requests normally pick up a suffix like `(#1234)`. Inside `pingcap/dumpling`, `#1234` points to the right PR. Once those commits land in `pingcap/tidb`, every bare `#1234` silently links to an unrelated issue or PR in `tidb`.
+
+To fix that, we have to rewrite the commit messages for all incoming commits in bulk using [git-filter-branch](https://git-scm.com/docs/git-filter-branch), one of Git's sharp-edged commands that I hope you never have to touch:
+
+```bash
+git filter-branch --msg-filter 'perl -pe "s/#(\d+)/pingcap\/dumpling#\$1/"' -- HEAD...master
+```
+
+With a quick regex substitution and a [git-rev-list](https://git-scm.com/docs/git-rev-list) range, the commit messages now point back to `pingcap/dumpling#1234`.
+
+## 3. Fixing File Paths for `git-blame`
+
+The last problem is the nastiest: after `git-subtree` merges the two repositories, the file paths in the imported commits no longer match where the files actually live.
+
+Say a commit in `dumpling` edited a file under `tests/`. After `git-subtree`, that file lives under `dumpling/tests/`, yet the historical commit still records a diff against `tests/`. That breaks [git-blame](https://git-scm.com/docs/git-blame): files under `dumpling/` appear to have no history beyond the merge commit, even though all the old commits are sitting right there under the wrong paths.
+
+In theory, the fix is trivial: take the imported commits and prepend `dumpling/` to every path. In practice, Git makes doing that *after* `git-subtree` surprisingly awkward, and at the time I couldn't find a clean way to rewrite only the sub-repo's paths post-merge.
+
+The workaround was to back up and rewrite the sub-repository *before* running `git-subtree`: move every file into a `dumpling/` subdirectory across the entire history, rewrite the PR numbers, pull the result into `tidb`, and then unwrap the extra nested `dumpling/dumpling/` layer.
+
+First, prepare the sub-repository:
+
+```bash
+git clone https://github.com/pingcap/dumpling.git
+cd dumpling
+git checkout -b merge-to-tidb
+git filter-branch --tree-filter 'mkdir -p dumpling && ls -A | grep -v dumpling | xargs -I files mv files dumpling/' -- HEAD
+git filter-branch --msg-filter 'perl -pe "s/#(\d+)/pingcap\/dumpling#\$1/"' -- HEAD
+git push
+```
+
+Then, inside `tidb`:
+
+```bash
+git checkout -b merge-dumpling
+git subtree add --prefix=dumpling https://github.com/tisonkun/dumpling.git merge-to-tidb
+cd dumpling
+mv dumpling/* .
+mv dumpling/.* . # move hidden files
+git add .
+git commit --amend -s
+git push
+```
+
+That fixes the relative paths too. The rewritten Dumpling history eventually landed in `pingcap/tidb` via [PR-29001](https://github.com/pingcap/tidb/pull/29001).
+
+## The Simpler Way I Learned Right After
+
+That third workaround was undeniably clumsy, with commands barely fitting together, though it was the best I had at the time. People pointed out [git-filter-repo](https://github.com/newren/git-filter-repo) as the modern replacement, except it meant installing an extra tool and wading through unfamiliar docs, so I passed.
+
+Later, I chatted with [@xhebox](https://github.com/xhebox), who drove the [`pingcap/parser` merge](https://github.com/pingcap/tidb/pull/28644). It turned out you didn't even need `git-subtree`: once you've rewritten the sub-repository's paths and commit messages in step one, you can push that branch straight into `tidb` and rebase it onto `master`. It feels like a bit of a brain teaser, and it eliminates both `git-subtree` and the awkward directory unwrap afterward.
