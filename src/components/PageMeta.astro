@@ -14,7 +14,7 @@ const { meta, og, twitter } = getPageMeta({
     description: description || Site.description,
     baseUrl: Site.baseUrl,
     ogImageAbsoluteUrl: `${Site.baseUrl}/images/og.png`,
-    ogImageAltText: "Da Capo",
+    ogImageAltText: `${Site.title} — ${Site.description}`,
     ogImageWidth: 1200,
     ogImageHeight: 630,
     siteOwnerTwitterHandle: Social.twitterId,

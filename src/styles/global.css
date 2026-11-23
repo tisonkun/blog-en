@@ -92,6 +92,11 @@
     }
 }
 
+.font-display {
+    font-family: "Fraunces Variable", Georgia, serif;
+    font-variation-settings: "opsz" 144;
+}
+
 .post-content {
     @apply leading-relaxed;
 }
