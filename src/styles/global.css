@@ -92,6 +92,10 @@
     }
 }
 
+.font-display {
+    font-family: "Newsreader Variable", Georgia, serif;
+}
+
 .post-content {
     @apply leading-relaxed;
 }

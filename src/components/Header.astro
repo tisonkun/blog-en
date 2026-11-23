@@ -4,7 +4,25 @@ import { Site } from "@/config";
 
 <header class="mt-8">
     <h1 class="text-center lg:text-left text-4xl text-gray-900 font-medium m-0">
-        <a class="text-gray-900" href={Site.url}>{Site.title}</a>
+        <a
+            class="inline-flex items-center gap-3 text-gray-900 hover:text-gray-700 font-display tracking-[-0.02em]"
+            href={Site.url}
+        >
+            <svg
+                class="w-9 h-9 shrink-0"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <rect x="2" y="2" width="60" height="60" rx="14" fill="#19191F" />
+                <rect x="17" y="16" width="7.5" height="32" rx="1.5" fill="#FAFAFC" />
+                <rect x="29" y="16" width="3" height="32" rx="1.2" fill="#FAFAFC" />
+                <circle cx="42.5" cy="25.5" r="3.8" fill="#FAFAFC" />
+                <circle cx="42.5" cy="38.5" r="3.8" fill="#3B82F6" />
+            </svg>
+            <span>{Site.title}</span>
+        </a>
     </h1>
     <div class="lg:flex text-center justify-between">
         <p class="text-lg text-gray-600">{Site.description}</p>
