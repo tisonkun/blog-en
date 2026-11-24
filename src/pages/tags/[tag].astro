@@ -3,7 +3,6 @@ import type { CollectionEntry } from "astro:content";
 import { getListedPosts } from "@/lib/post";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { titleCase } from "title-case";
-import _ from "lodash";
 import PageMeta from "@/components/PageMeta.astro";
 import PostList from "@/components/PostList.astro";
 
@@ -14,17 +13,16 @@ interface Props {
 
 export async function getStaticPaths() {
     const posts = await getListedPosts();
-    let tags: Record<string, CollectionEntry<"posts">[]> = {};
-    for (let post of posts) {
-        for (let tag of post.data.tags) {
-            if (!tags[tag]) {
-                tags[tag] = [];
-            }
-            tags[tag].push(post);
+    const tags = new Map<string, CollectionEntry<"posts">[]>();
+    for (const post of posts) {
+        for (const tag of post.data.tags) {
+            const list = tags.get(tag) ?? [];
+            list.push(post);
+            tags.set(tag, list);
         }
     }
-    return _.entries(tags).map(([tag, posts]) => ({
-        params: { tag: tag },
+    return [...tags.entries()].map(([tag, posts]) => ({
+        params: { tag },
         props: { posts, tag },
     }));
 }

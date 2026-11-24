@@ -1,16 +1,10 @@
 ---
-import { getListedPosts } from "@/lib/post";
+import { countTerms, getListedPosts } from "@/lib/post";
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import _ from "lodash";
 import PageMeta from "@/components/PageMeta.astro";
 
 const posts = await getListedPosts();
-const tags = posts.flatMap((entry) => entry.data.tags);
-const tagCounts = _.countBy(tags);
-const sortedTags = _.chain(tagCounts)
-    .map((count, tag) => ({ tag, count }))
-    .orderBy(["count", "tag"], "desc")
-    .value();
+const sortedTags = countTerms(posts.flatMap((entry) => entry.data.tags));
 const title = "Tags";
 ---
 
@@ -20,7 +14,7 @@ const title = "Tags";
         <h1 class="text-center text-5xl">{title}</h1>
         <div class="mt-8">
             {
-                sortedTags.map(({ tag, count }) => (
+                sortedTags.map(({ name: tag, count }) => (
                     <a
                         class="border-6 border-transparent m-2 rounded text-xl"
                         href={`/tags/${tag}`}

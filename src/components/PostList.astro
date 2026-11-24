@@ -1,14 +1,14 @@
 ---
-import _ from "lodash";
 import DateTile from "./DateTile.astro";
 import type { CollectionEntry } from "astro:content";
+import { sortPostsByDateDesc } from "@/lib/post";
 
 interface Props {
     posts: CollectionEntry<"posts">[];
 }
 
 const { posts } = Astro.props;
-const sortedPosts = _.orderBy(posts, (post) => post.data.date, "desc");
+const sortedPosts = sortPostsByDateDesc(posts);
 ---
 
 <ul>

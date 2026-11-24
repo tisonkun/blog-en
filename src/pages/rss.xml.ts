@@ -1,12 +1,12 @@
-import _ from "lodash";
 import rss from '@astrojs/rss';
 import { Site } from "@/config.ts";
 import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
+import { sortPostsByDateDesc } from "@/lib/post";
 
 export async function GET(_ctx: APIContext) {
     const posts = await getCollection('posts');
-    const sortedPosts = _.orderBy(posts, (post) => post.data.date, "desc")
+    const sortedPosts = sortPostsByDateDesc(posts);
 
     let baseUrl = Site.url.toString();
     // removing trailing slash if found
